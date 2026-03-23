@@ -8,5 +8,5 @@ services:
       - "8090:9002"
     devices:
       - /dev/bus/usb:/dev/bus/usb
-    tmpfs:
-      - /tmp
+    volumes:
+      - ./config.toml:/tmp/config.toml

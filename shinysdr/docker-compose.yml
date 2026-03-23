@@ -11,6 +11,6 @@ services:
       - /dev/bus/usb:/dev/bus/usb
     volumes:
       - ./config:/config
-    command: start /config/my-config
+    command: -i start /config/my-config
     tmpfs:
       - /tmp
