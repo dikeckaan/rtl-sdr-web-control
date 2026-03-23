@@ -1,0 +1,84 @@
+{
+    "bandColors": {
+        "amateur": "#FF0000FF",
+        "aviation": "#00FF00FF",
+        "broadcast": "#0000FFFF",
+        "marine": "#00FFFFFF",
+        "military": "#FFFF00FF"
+    },
+    "bandPlan": "General",
+    "bandPlanEnabled": true,
+    "bandPlanPos": 0,
+    "centerTuning": false,
+    "colorMap": "Classic",
+    "decimation": 1,
+    "fastFFT": false,
+    "fftHeight": 300,
+    "fftHold": false,
+    "fftHoldSpeed": 60,
+    "fftRate": 20,
+    "fftSize": 65536,
+    "fftSmoothing": false,
+    "fftSmoothingSpeed": 100,
+    "fftWindow": 2,
+    "frequency": 93300000.0,
+    "fullWaterfallUpdate": false,
+    "fullscreen": false,
+    "invertIQ": false,
+    "iqCorrection": false,
+    "lockMenuOrder": false,
+    "manualOffset": 0.0,
+    "max": 0.0,
+    "maximized": false,
+    "menuElements": [
+        { "name": "Source", "open": true },
+        { "name": "Radio", "open": true },
+        { "name": "Sinks", "open": true },
+        { "name": "Display", "open": true }
+    ],
+    "menuWidth": 300,
+    "min": -120.0,
+    "moduleInstances": {
+        "Network Sink": {
+            "enabled": true,
+            "module": "network_sink"
+        },
+        "RTL-SDR Source": {
+            "enabled": true,
+            "module": "rtl_sdr_source"
+        },
+        "Radio": {
+            "enabled": true,
+            "module": "radio"
+        }
+    },
+    "modules": [],
+    "modulesDirectory": "/usr/lib/sdrpp/plugins",
+    "offsets": {},
+    "resourcesDirectory": "/usr/share/sdrpp",
+    "selectedOffset": "None",
+    "showMenu": true,
+    "showWaterfall": true,
+    "snrSmoothing": false,
+    "snrSmoothingSpeed": 20,
+    "source": "RTL-SDR",
+    "streams": {
+        "Radio": {
+            "muted": false,
+            "sink": "Network",
+            "volume": 1.0
+        }
+    },
+    "theme": "Dark",
+    "uiScale": 1.0,
+    "vfoColors": {
+        "Radio": "#FFFFFF"
+    },
+    "vfoOffsets": {
+        "Radio": -600000.0
+    },
+    "windowSize": {
+        "h": 720,
+        "w": 1280
+    }
+}
