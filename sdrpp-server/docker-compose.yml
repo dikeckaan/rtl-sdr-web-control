@@ -6,6 +6,7 @@ services:
     privileged: true
     ports:
       - "8090:8090"
+      - "8092:8092"
     devices:
       - /dev/bus/usb:/dev/bus/usb
     environment:

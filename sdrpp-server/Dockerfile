@@ -34,7 +34,7 @@ RUN git clone --depth 1 https://github.com/AlexandreRouma/SDRPlusPlus.git /tmp/s
         -DOPT_BUILD_M17_DECODER=OFF \
         -DOPT_BUILD_USRP_SOURCE=OFF \
         -DOPT_BUILD_SOAPY_SOURCE=OFF \
-        -DOPT_BUILD_NETWORK_SINK=OFF \
+        -DOPT_BUILD_NETWORK_SINK=ON \
     && make -j$(nproc) && make install && \
     rm -rf /tmp/sdrpp
 
@@ -50,6 +50,6 @@ ENV DISPLAY=:99
 ENV SCREEN_WIDTH=1280
 ENV SCREEN_HEIGHT=720
 
-EXPOSE 8090
+EXPOSE 8090 8092
 
 CMD ["supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
