@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker compose:*)",
+      "Bash(docker ps:*)",
+      "Bash(sudo systemctl:*)",
+      "Bash(sudo netstat:*)",
+      "Bash(sudo ss:*)",
+      "Bash(sudo cat:*)",
+      "Read(//root/**)",
+      "Bash(sudo find:*)",
+      "Bash(lsusb)",
+      "Bash(sudo dmesg:*)",
+      "Bash(docker rm:*)",
+      "Bash(lsmod)",
+      "Bash(docker exec:*)",
+      "Bash(sudo bash:*)",
+      "Bash(sudo rmmod:*)",
+      "Bash(sudo depmod:*)",
+      "Bash(sudo update-initramfs:*)",
+      "Bash(sudo dracut:*)",
+      "WebSearch",
+      "WebFetch(domain:hub.docker.com)",
+      "WebFetch(domain:github.com)",
+      "Bash(docker buildx:*)",
+      "WebFetch(domain:docs.linuxserver.io)",
+      "Bash(docker manifest:*)",
+      "Bash(python3 -c \"import sys,json; m=json.load\\(sys.stdin\\); [print\\(p.get\\(''''platform'''',{}\\).get\\(''''architecture'''',''''?''''\\), p.get\\(''''platform'''',{}\\).get\\(''''os'''',''''?''''\\)\\) for p in m.get\\(''''manifests'''',[]\\)]\")",
+      "WebFetch(domain:www.kasmweb.com)"
+    ]
+  }
+}

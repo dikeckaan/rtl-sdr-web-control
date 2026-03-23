@@ -1,0 +1,14 @@
+services:
+  switcher:
+    build: .
+    container_name: sdr-switcher
+    ports:
+      - "8091:8091"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /home/kaandikec/sdr/openwebrx/docker-compose.yml:/home/kaandikec/sdr/openwebrx/docker-compose.yml:ro
+      - /home/kaandikec/sdr/ultrafeeder/docker-compose.yml:/home/kaandikec/sdr/ultrafeeder/docker-compose.yml:ro
+      - /home/kaandikec/sdr/phantomsdr/docker-compose.yml:/home/kaandikec/sdr/phantomsdr/docker-compose.yml:ro
+      - /home/kaandikec/sdr/shinysdr/docker-compose.yml:/home/kaandikec/sdr/shinysdr/docker-compose.yml:ro
+      - /home/kaandikec/sdr/sdrpp-server/docker-compose.yml:/home/kaandikec/sdr/sdrpp-server/docker-compose.yml:ro
+    restart: unless-stopped

@@ -1,0 +1,12 @@
+services:
+  phantomsdr:
+    image: simonblandford/phantomsdr:latest
+    container_name: phantomsdr
+    restart: unless-stopped
+    privileged: true
+    ports:
+      - "8090:9002"
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+    tmpfs:
+      - /tmp

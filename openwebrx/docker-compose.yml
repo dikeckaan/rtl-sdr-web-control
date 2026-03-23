@@ -1,0 +1,14 @@
+services:
+  openwebrx:
+    image: jketterl/openwebrx:stable
+    container_name: openwebrx
+    restart: unless-stopped
+    privileged: true
+    ports:
+      - "8090:8073"
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+    tmpfs:
+      - /tmp/openwebrx
+    volumes:
+      - ./openwebrx:/var/lib/openwebrx

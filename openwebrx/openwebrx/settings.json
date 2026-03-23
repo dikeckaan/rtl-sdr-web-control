@@ -1,0 +1,196 @@
+{
+  "receiver_name": "pi5 RTL-SDR",
+  "receiver_location": "pi5.local",
+  "sdrs": {
+    "rtlsdr": {
+      "name": "RTL-SDR USB Stick",
+      "type": "rtl_sdr",
+      "profiles": {
+        "lw": {
+          "name": "Uzun Dalga (LW)",
+          "center_freq": 200000,
+          "rf_gain": 49,
+          "samp_rate": 960000,
+          "start_freq": 198000,
+          "start_mod": "am"
+        },
+        "mw": {
+          "name": "Orta Dalga (MW/AM)",
+          "center_freq": 1000000,
+          "rf_gain": 49,
+          "samp_rate": 960000,
+          "start_freq": 1008000,
+          "start_mod": "am"
+        },
+        "sw_49m": {
+          "name": "Kisa Dalga 49m",
+          "center_freq": 6000000,
+          "rf_gain": 40,
+          "samp_rate": 960000,
+          "start_freq": 6070000,
+          "start_mod": "am"
+        },
+        "sw_41m": {
+          "name": "Kisa Dalga 41m",
+          "center_freq": 7200000,
+          "rf_gain": 40,
+          "samp_rate": 960000,
+          "start_freq": 7200000,
+          "start_mod": "am"
+        },
+        "sw_31m": {
+          "name": "Kisa Dalga 31m",
+          "center_freq": 9600000,
+          "rf_gain": 40,
+          "samp_rate": 960000,
+          "start_freq": 9650000,
+          "start_mod": "am"
+        },
+        "sw_25m": {
+          "name": "Kisa Dalga 25m",
+          "center_freq": 11800000,
+          "rf_gain": 40,
+          "samp_rate": 960000,
+          "start_freq": 11850000,
+          "start_mod": "am"
+        },
+        "sw_19m": {
+          "name": "Kisa Dalga 19m",
+          "center_freq": 15200000,
+          "rf_gain": 40,
+          "samp_rate": 960000,
+          "start_freq": 15300000,
+          "start_mod": "am"
+        },
+        "sw_16m": {
+          "name": "Kisa Dalga 16m",
+          "center_freq": 17700000,
+          "rf_gain": 40,
+          "samp_rate": 960000,
+          "start_freq": 17750000,
+          "start_mod": "am"
+        },
+        "cb": {
+          "name": "CB Radio (27 MHz)",
+          "center_freq": 27200000,
+          "rf_gain": 40,
+          "samp_rate": 960000,
+          "start_freq": 27185000,
+          "start_mod": "am"
+        },
+        "10m": {
+          "name": "10m Ham Band",
+          "center_freq": 28500000,
+          "rf_gain": 40,
+          "samp_rate": 2400000,
+          "start_freq": 28400000,
+          "start_mod": "usb"
+        },
+        "fm_low": {
+          "name": "FM Radyo (87-99 MHz)",
+          "center_freq": 93000000,
+          "rf_gain": 29,
+          "samp_rate": 2400000,
+          "start_freq": 93100000,
+          "start_mod": "wfm"
+        },
+        "fm_high": {
+          "name": "FM Radyo (99-108 MHz)",
+          "center_freq": 103500000,
+          "rf_gain": 29,
+          "samp_rate": 2400000,
+          "start_freq": 103500000,
+          "start_mod": "wfm"
+        },
+        "airband": {
+          "name": "Havacilik Bandi",
+          "center_freq": 127000000,
+          "rf_gain": 40,
+          "samp_rate": 2400000,
+          "start_freq": 127000000,
+          "start_mod": "am"
+        },
+        "noaa": {
+          "name": "NOAA Hava Uydu",
+          "center_freq": 137500000,
+          "rf_gain": 40,
+          "samp_rate": 960000,
+          "start_freq": 137620000,
+          "start_mod": "nfm"
+        },
+        "2m": {
+          "name": "2m VHF Ham",
+          "center_freq": 145000000,
+          "rf_gain": 29,
+          "samp_rate": 2400000,
+          "start_freq": 145725000,
+          "start_mod": "nfm"
+        },
+        "marine": {
+          "name": "Deniz VHF",
+          "center_freq": 156800000,
+          "rf_gain": 40,
+          "samp_rate": 960000,
+          "start_freq": 156800000,
+          "start_mod": "nfm"
+        },
+        "dab": {
+          "name": "DAB+ Radyo",
+          "center_freq": 220000000,
+          "rf_gain": 29,
+          "samp_rate": 2048000,
+          "start_freq": 220000000,
+          "start_mod": "nfm"
+        },
+        "ism433": {
+          "name": "ISM 433 MHz",
+          "center_freq": 433920000,
+          "rf_gain": 40,
+          "samp_rate": 960000,
+          "start_freq": 433920000,
+          "start_mod": "nfm"
+        },
+        "70cm": {
+          "name": "70cm UHF Ham",
+          "center_freq": 438800000,
+          "rf_gain": 29,
+          "samp_rate": 2400000,
+          "start_freq": 439200000,
+          "start_mod": "nfm"
+        },
+        "pmr446": {
+          "name": "PMR446 Telsiz",
+          "center_freq": 446100000,
+          "rf_gain": 40,
+          "samp_rate": 960000,
+          "start_freq": 446006250,
+          "start_mod": "nfm"
+        },
+        "lte800": {
+          "name": "LTE 800",
+          "center_freq": 806000000,
+          "rf_gain": 40,
+          "samp_rate": 2400000,
+          "start_freq": 806000000,
+          "start_mod": "nfm"
+        },
+        "gsm900": {
+          "name": "GSM 900",
+          "center_freq": 945000000,
+          "rf_gain": 40,
+          "samp_rate": 2400000,
+          "start_freq": 945000000,
+          "start_mod": "nfm"
+        },
+        "adsb": {
+          "name": "ADS-B (1090 MHz)",
+          "center_freq": 1090000000,
+          "rf_gain": 49,
+          "samp_rate": 2400000,
+          "start_freq": 1090000000,
+          "start_mod": "nfm"
+        }
+      }
+    }
+  }
+}

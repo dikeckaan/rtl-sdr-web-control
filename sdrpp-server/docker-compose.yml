@@ -1,0 +1,14 @@
+services:
+  sdrpp:
+    build: .
+    container_name: sdrpp-novnc
+    restart: unless-stopped
+    privileged: true
+    ports:
+      - "8090:8090"
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+    environment:
+      - DISPLAY=:99
+    tmpfs:
+      - /tmp

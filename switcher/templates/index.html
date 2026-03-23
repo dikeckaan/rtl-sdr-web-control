@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="refresh" content="10">
+    <title>SDR Switcher</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        h1 { margin: 20px 0 10px; font-size: 1.8em; color: #e94560; }
+        .subtitle { color: #888; margin-bottom: 30px; font-size: 0.9em; }
+        .flash { padding: 10px 20px; border-radius: 8px; margin-bottom: 15px; max-width: 600px; width: 100%; text-align: center; }
+        .flash.success { background: #16213e; border: 1px solid #0f3460; color: #4ecca3; }
+        .flash.error { background: #2e1a1a; border: 1px solid #e94560; color: #e94560; }
+        .cards { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+        .card { background: #16213e; border-radius: 12px; padding: 30px; width: 280px; text-align: center; border: 2px solid #0f3460; transition: border-color 0.3s; }
+        .card.active { border-color: #4ecca3; box-shadow: 0 0 20px rgba(78, 204, 163, 0.2); }
+        .card h2 { font-size: 1.3em; margin-bottom: 8px; }
+        .card .desc { color: #888; font-size: 0.85em; margin-bottom: 15px; }
+        .badge { display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: 0.8em; font-weight: 600; margin-bottom: 15px; }
+        .badge.running { background: #4ecca3; color: #1a1a2e; }
+        .badge.stopped { background: #444; color: #999; }
+        .link { display: block; color: #4ecca3; text-decoration: none; margin-bottom: 15px; font-size: 0.85em; }
+        .link:hover { text-decoration: underline; }
+        form { display: inline; }
+        button { padding: 10px 28px; border: none; border-radius: 8px; font-size: 0.95em; cursor: pointer; font-weight: 600; transition: background 0.2s; }
+        .btn-start { background: #4ecca3; color: #1a1a2e; }
+        .btn-start:hover { background: #3db890; }
+        .btn-stop { background: #e94560; color: #fff; }
+        .btn-stop:hover { background: #c73650; }
+        .btn-restart { background: #f0a500; color: #1a1a2e; }
+        .btn-restart:hover { background: #d4920a; }
+        button:disabled { opacity: 0.4; cursor: not-allowed; }
+        .stop-all { margin-top: 25px; }
+        .btn-stop-all { background: #e94560; color: #fff; padding: 12px 36px; font-size: 1em; }
+        .btn-stop-all:hover { background: #c73650; }
+        .note { color: #555; font-size: 0.75em; margin-top: 30px; }
+    </style>
+</head>
+<body>
+    <h1>SDR Switcher</h1>
+    <p class="subtitle">Ayni anda sadece bir proje calisabilir</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+    <div class="flash {{ category }}">{{ message }}</div>
+    {% endfor %}
+    {% endwith %}
+
+    <div class="cards">
+        {% for key, proj in projects.items() %}
+        <div class="card {{ 'active' if status[key] else '' }}">
+            <h2>{{ proj.name }}</h2>
+            <p class="desc">{{ proj.description }}</p>
+            <span class="badge {{ 'running' if status[key] else 'stopped' }}">
+                {{ 'Calisiyor' if status[key] else 'Durdu' }}
+            </span>
+            {% if status[key] %}
+            <a class="link" href="http://{{ request.host.split(':')[0] }}:{{ proj.port }}" target="_blank">
+                Arayuzu Ac (port {{ proj.port }})
+            </a>
+            <form method="POST" action="/restart/{{ key }}">
+                <button type="submit" class="btn-restart">Yeniden Baslat</button>
+            </form>
+            <form method="POST" action="/stop/{{ key }}">
+                <button type="submit" class="btn-stop">Durdur</button>
+            </form>
+            {% else %}
+            <br>
+            <form method="POST" action="/start/{{ key }}">
+                <button type="submit" class="btn-start">Baslat</button>
+            </form>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="stop-all">
+        <form method="POST" action="/stop-all">
+            <button type="submit" class="btn-stop-all">Hepsini Durdur</button>
+        </form>
+    </div>
+
+    <p class="note">Bir projeyi baslattiginizda digeri otomatik olarak durdurulur.</p>
+</body>
+</html>
