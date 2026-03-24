@@ -4,9 +4,9 @@ services:
     container_name: shinysdr
     restart: unless-stopped
     privileged: true
-    ports:
-      - "8090:8100"
-      - "8101:8101"
+    expose:
+      - "8100"
+      - "8101"
     devices:
       - /dev/bus/usb:/dev/bus/usb
     volumes:
@@ -14,3 +14,14 @@ services:
     command: start /config/my-config
     tmpfs:
       - /tmp
+
+  shinysdr-proxy:
+    image: nginx:alpine
+    container_name: shinysdr-proxy
+    restart: unless-stopped
+    ports:
+      - "8090:8090"
+    volumes:
+      - /home/kaandikec/sdr/shinysdr/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - shinysdr
