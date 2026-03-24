@@ -1,87 +1,229 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="refresh" content="10">
-    <title>SDR Switcher</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        h1 { margin: 20px 0 10px; font-size: 1.8em; color: #e94560; }
-        .subtitle { color: #888; margin-bottom: 30px; font-size: 0.9em; }
-        .flash { padding: 10px 20px; border-radius: 8px; margin-bottom: 15px; max-width: 600px; width: 100%; text-align: center; }
-        .flash.success { background: #16213e; border: 1px solid #0f3460; color: #4ecca3; }
-        .flash.error { background: #2e1a1a; border: 1px solid #e94560; color: #e94560; }
-        .cards { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
-        .card { background: #16213e; border-radius: 12px; padding: 30px; width: 280px; text-align: center; border: 2px solid #0f3460; transition: border-color 0.3s; }
-        .card.active { border-color: #4ecca3; box-shadow: 0 0 20px rgba(78, 204, 163, 0.2); }
-        .card h2 { font-size: 1.3em; margin-bottom: 8px; }
-        .card .desc { color: #888; font-size: 0.85em; margin-bottom: 15px; }
-        .badge { display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: 0.8em; font-weight: 600; margin-bottom: 15px; }
-        .badge.running { background: #4ecca3; color: #1a1a2e; }
-        .badge.stopped { background: #444; color: #999; }
-        .link { display: block; color: #4ecca3; text-decoration: none; margin-bottom: 15px; font-size: 0.85em; }
-        .link:hover { text-decoration: underline; }
-        form { display: inline; }
-        button { padding: 10px 28px; border: none; border-radius: 8px; font-size: 0.95em; cursor: pointer; font-weight: 600; transition: background 0.2s; }
-        .btn-start { background: #4ecca3; color: #1a1a2e; }
-        .btn-start:hover { background: #3db890; }
-        .btn-stop { background: #e94560; color: #fff; }
-        .btn-stop:hover { background: #c73650; }
-        .btn-restart { background: #f0a500; color: #1a1a2e; }
-        .btn-restart:hover { background: #d4920a; }
-        button:disabled { opacity: 0.4; cursor: not-allowed; }
-        .stop-all { margin-top: 25px; }
-        .btn-stop-all { background: #e94560; color: #fff; padding: 12px 36px; font-size: 1em; }
-        .btn-stop-all:hover { background: #c73650; }
-        .note { color: #555; font-size: 0.75em; margin-top: 30px; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SDR Control Panel</title>
+<style>
+:root {
+  --bg: #0c0e14;
+  --surface: #151822;
+  --surface2: #1c2030;
+  --border: #252a3a;
+  --border-active: #3b82f6;
+  --text: #e2e8f0;
+  --text2: #94a3b8;
+  --text3: #64748b;
+  --green: #22c55e;
+  --green-bg: rgba(34,197,94,0.1);
+  --red: #ef4444;
+  --red-bg: rgba(239,68,68,0.1);
+  --blue: #3b82f6;
+  --blue-bg: rgba(59,130,246,0.1);
+  --amber: #f59e0b;
+  --amber-bg: rgba(245,158,11,0.1);
+  --radius: 12px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+.container { max-width: 900px; margin: 0 auto; padding: 24px 16px; }
+
+/* Header */
+header { text-align: center; margin-bottom: 32px; }
+header h1 { font-size: 1.5em; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 4px; }
+header h1 span { color: var(--blue); }
+header p { color: var(--text3); font-size: 0.85em; }
+.hw-badge { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+  padding: 5px 14px; font-size: 0.75em; color: var(--text2); }
+.hw-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+
+/* Toast */
+#toast { position: fixed; top: 20px; right: 20px; z-index: 100; display: flex; flex-direction: column; gap: 8px; }
+.toast-item { padding: 12px 20px; border-radius: 8px; font-size: 0.85em; font-weight: 500;
+  animation: slideIn 0.3s ease; backdrop-filter: blur(12px); }
+.toast-item.success { background: var(--green-bg); color: var(--green); border: 1px solid rgba(34,197,94,0.2); }
+.toast-item.error { background: var(--red-bg); color: var(--red); border: 1px solid rgba(239,68,68,0.2); }
+@keyframes slideIn { from { transform: translateX(100%); opacity:0; } to { transform: translateX(0); opacity:1; } }
+
+/* Cards */
+.grid { display: flex; flex-direction: column; gap: 12px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 20px 24px; display: flex; align-items: center; gap: 20px;
+  transition: border-color 0.2s, box-shadow 0.2s; position: relative; overflow: hidden; }
+.card:hover { border-color: #363d52; }
+.card.active { border-color: var(--border-active); box-shadow: 0 0 0 1px var(--border-active), 0 4px 24px rgba(59,130,246,0.08); }
+.card.loading { opacity: 0.6; pointer-events: none; }
+
+.card-icon { width: 48px; height: 48px; border-radius: 10px; display: flex; align-items: center;
+  justify-content: center; font-size: 22px; flex-shrink: 0; }
+.card-icon.radio { background: var(--blue-bg); }
+.card-icon.desktop { background: rgba(168,85,247,0.1); }
+.card-icon.waterfall { background: rgba(6,182,212,0.1); }
+.card-icon.signal { background: var(--amber-bg); }
+.card-icon.plane { background: var(--green-bg); }
+
+.card-body { flex: 1; min-width: 0; }
+.card-title { font-size: 1em; font-weight: 600; margin-bottom: 2px; display: flex; align-items: center; gap: 8px; }
+.card-desc { color: var(--text3); font-size: 0.8em; line-height: 1.4; }
+
+.status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.status-dot.on { background: var(--green); box-shadow: 0 0 8px rgba(34,197,94,0.5); }
+.status-dot.off { background: var(--text3); }
+
+.card-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+button { border: none; border-radius: 8px; font-size: 0.8em; font-weight: 600; cursor: pointer;
+  padding: 8px 16px; transition: all 0.15s; font-family: inherit; }
+button:active { transform: scale(0.96); }
+
+.btn-launch { background: var(--blue); color: #fff; }
+.btn-launch:hover { background: #2563eb; }
+.btn-open { background: var(--green); color: #fff; padding: 8px 14px; }
+.btn-open:hover { background: #16a34a; }
+.btn-stop { background: var(--surface2); color: var(--red); border: 1px solid rgba(239,68,68,0.2); }
+.btn-stop:hover { background: var(--red-bg); }
+.btn-restart { background: var(--surface2); color: var(--amber); border: 1px solid rgba(245,158,11,0.2); }
+.btn-restart:hover { background: var(--amber-bg); }
+
+/* Footer */
+.footer { text-align: center; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
+.btn-danger { background: var(--surface); color: var(--red); border: 1px solid rgba(239,68,68,0.15);
+  padding: 10px 28px; font-size: 0.85em; border-radius: 8px; }
+.btn-danger:hover { background: var(--red-bg); border-color: rgba(239,68,68,0.3); }
+.footer-note { color: var(--text3); font-size: 0.7em; margin-top: 12px; }
+
+/* Spinner */
+.spinner { width: 14px; height: 14px; border: 2px solid transparent; border-top-color: currentColor;
+  border-radius: 50%; animation: spin 0.6s linear infinite; display: inline-block; vertical-align: middle; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Responsive */
+@media (max-width: 600px) {
+  .card { flex-direction: column; text-align: center; gap: 12px; padding: 16px; }
+  .card-actions { justify-content: center; flex-wrap: wrap; }
+}
+</style>
 </head>
 <body>
-    <h1>SDR Switcher</h1>
-    <p class="subtitle">Ayni anda sadece bir proje calisabilir</p>
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% for category, message in messages %}
-    <div class="flash {{ category }}">{{ message }}</div>
-    {% endfor %}
-    {% endwith %}
+<div class="container">
+  <header>
+    <h1><span>SDR</span> Control Panel</h1>
+    <p>Nooelec NESDR SMArt v5 &mdash; 24 MHz - 1.766 GHz</p>
+    <div class="hw-badge"><span class="hw-dot"></span> RTL2838 USB</div>
+  </header>
 
-    <div class="cards">
-        {% for key, proj in projects.items() %}
-        <div class="card {{ 'active' if status[key] else '' }}">
-            <h2>{{ proj.name }}</h2>
-            <p class="desc">{{ proj.description }}</p>
-            <span class="badge {{ 'running' if status[key] else 'stopped' }}">
-                {{ 'Calisiyor' if status[key] else 'Durdu' }}
-            </span>
-            {% if status[key] %}
-            <a class="link" href="http://{{ request.host.split(':')[0] }}:{{ proj.port }}" target="_blank">
-                Arayuzu Ac (port {{ proj.port }})
-            </a>
-            <form method="POST" action="/restart/{{ key }}">
-                <button type="submit" class="btn-restart">Yeniden Baslat</button>
-            </form>
-            <form method="POST" action="/stop/{{ key }}">
-                <button type="submit" class="btn-stop">Durdur</button>
-            </form>
-            {% else %}
-            <br>
-            <form method="POST" action="/start/{{ key }}">
-                <button type="submit" class="btn-start">Baslat</button>
-            </form>
-            {% endif %}
+  <div id="toast"></div>
+  <div id="grid" class="grid"></div>
+
+  <div class="footer">
+    <button class="btn-danger" onclick="stopAll()">Tum Servisleri Durdur</button>
+    <p class="footer-note">Ayni anda yalnizca bir SDR servisi calisabilir. Yeni servis baslatildiginda aktif olan otomatik durdurulur.</p>
+  </div>
+</div>
+
+<script>
+const ICONS = {
+  radio: '<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4.9 19.1A13 13 0 0 1 12 2a13 13 0 0 1 7.1 17.1"/><path d="M7.8 16.2A8 8 0 0 1 12 5a8 8 0 0 1 4.2 11.2"/><circle cx="12" cy="17" r="2"/></svg>',
+  desktop: '<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
+  waterfall: '<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12h4l3-9 4 18 3-9h6"/></svg>',
+  signal: '<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 20h.01"/><path d="M7 20v-4"/><path d="M12 20v-8"/><path d="M17 20V8"/><path d="M22 20V4"/></svg>',
+  plane: '<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>',
+};
+
+const COLORS = { radio: '#3b82f6', desktop: '#a855f7', waterfall: '#06b6d4', signal: '#f59e0b', plane: '#22c55e' };
+
+let projects = [];
+let busy = {};
+
+function isRemote() {
+  return location.hostname === 'sdr-selection.kaandikec.com';
+}
+
+function getAppUrl(proj) {
+  if (isRemote()) return 'https://sdr.kaandikec.com/';
+  return 'http://pi5.local:' + proj.port;
+}
+
+function toast(msg, type) {
+  const el = document.createElement('div');
+  el.className = 'toast-item ' + type;
+  el.textContent = msg;
+  document.getElementById('toast').appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+function render() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = projects.map(p => {
+    const loading = busy[p.id];
+    const color = COLORS[p.icon] || '#3b82f6';
+    return `
+    <div class="card ${p.running ? 'active' : ''} ${loading ? 'loading' : ''}">
+      <div class="card-icon ${p.icon}" style="color:${color}">${ICONS[p.icon] || ''}</div>
+      <div class="card-body">
+        <div class="card-title">
+          <span class="status-dot ${p.running ? 'on' : 'off'}"></span>
+          ${p.name}
         </div>
-        {% endfor %}
-    </div>
+        <div class="card-desc">${p.description}</div>
+      </div>
+      <div class="card-actions">
+        ${p.running ? `
+          <a href="${getAppUrl(p)}" target="_blank"><button class="btn-open">Ac</button></a>
+          <button class="btn-restart" onclick="act('restart','${p.id}')">${loading ? '<span class="spinner"></span>' : 'Yeniden Baslat'}</button>
+          <button class="btn-stop" onclick="act('stop','${p.id}')">${loading ? '<span class="spinner"></span>' : 'Durdur'}</button>
+        ` : `
+          <button class="btn-launch" onclick="act('start','${p.id}')">${loading ? '<span class="spinner"></span>' : 'Baslat'}</button>
+        `}
+      </div>
+    </div>`;
+  }).join('');
+}
 
-    <div class="stop-all">
-        <form method="POST" action="/stop-all">
-            <button type="submit" class="btn-stop-all">Hepsini Durdur</button>
-        </form>
-    </div>
+async function fetchStatus() {
+  try {
+    const r = await fetch('/api/status');
+    const data = await r.json();
+    projects = data.projects;
+    render();
+  } catch(e) {}
+}
 
-    <p class="note">Bir projeyi baslattiginizda digeri otomatik olarak durdurulur.</p>
+async function act(action, id) {
+  busy[id] = true;
+  render();
+  try {
+    const r = await fetch(`/api/${action}/${id}`, { method: 'POST' });
+    const data = await r.json();
+    if (data.ok) toast(data.message, 'success');
+    else toast(data.error || 'Hata', 'error');
+  } catch(e) {
+    toast('Baglanti hatasi', 'error');
+  }
+  busy[id] = false;
+  await fetchStatus();
+}
+
+async function stopAll() {
+  const btns = document.querySelectorAll('.btn-danger');
+  btns.forEach(b => { b.innerHTML = '<span class="spinner"></span> Durduruluyor...'; b.disabled = true; });
+  try {
+    const r = await fetch('/api/stop-all', { method: 'POST' });
+    const data = await r.json();
+    if (data.ok) toast(data.message, 'success');
+    else toast(data.error || 'Hata', 'error');
+  } catch(e) {
+    toast('Baglanti hatasi', 'error');
+  }
+  btns.forEach(b => { b.innerHTML = 'Tum Servisleri Durdur'; b.disabled = false; });
+  await fetchStatus();
+}
+
+fetchStatus();
+setInterval(fetchStatus, 8000);
+</script>
 </body>
 </html>
