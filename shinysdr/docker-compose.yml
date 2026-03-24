@@ -10,7 +10,7 @@ services:
     devices:
       - /dev/bus/usb:/dev/bus/usb
     volumes:
-      - ./config:/config
+      - /home/kaandikec/sdr/shinysdr/config:/config
     command: start /config/my-config
     tmpfs:
       - /tmp

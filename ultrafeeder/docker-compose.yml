@@ -10,10 +10,10 @@ services:
     environment:
       TZ: Europe/Istanbul
       READSB_DEVICE_TYPE: rtlsdr
-      READSB_LAT: "40.94247"
-      READSB_LON: "29.14824"
-      READSB_ALT: "82m"
-      MLAT_USER: "dikeckaan"
+      READSB_LAT: "${STATION_LAT}"
+      READSB_LON: "${STATION_LON}"
+      READSB_ALT: "${STATION_ALT}"
+      MLAT_USER: "${MLAT_USER}"
     volumes:
       - /dev/bus/usb:/dev/bus/usb
       - ultrafeeder_globe_history:/var/globe_history
@@ -31,7 +31,7 @@ services:
       - ultrafeeder
     environment:
       TZ: Europe/Istanbul
-      FEEDER_ID: "790d0a84-345b-4370-866d-501a467b9d93"
+      FEEDER_ID: "${PIAWARE_FEEDER_ID}"
       RECEIVER_TYPE: relay
       BEASTHOST: ultrafeeder
       BEASTPORT: "30005"
@@ -54,7 +54,7 @@ services:
     environment:
       BEASTHOST: ultrafeeder
       BEASTPORT: "30005"
-      FR24KEY: "61109b8bce847030"
+      FR24KEY: "${FR24_KEY}"
       MLAT: "yes"
     dns_search:
       - .

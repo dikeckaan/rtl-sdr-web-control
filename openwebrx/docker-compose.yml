@@ -11,4 +11,4 @@ services:
     tmpfs:
       - /tmp/openwebrx
     volumes:
-      - ./openwebrx:/var/lib/openwebrx
+      - /home/kaandikec/sdr/openwebrx/openwebrx:/var/lib/openwebrx

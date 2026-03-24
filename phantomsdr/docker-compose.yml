@@ -9,4 +9,4 @@ services:
     devices:
       - /dev/bus/usb:/dev/bus/usb
     volumes:
-      - ./config.toml:/tmp/config.toml
+      - /home/kaandikec/sdr/phantomsdr/config.toml:/tmp/config.toml

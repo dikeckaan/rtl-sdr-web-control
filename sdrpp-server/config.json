@@ -39,9 +39,9 @@
     "menuWidth": 300,
     "min": -120.0,
     "moduleInstances": {
-        "Network Sink": {
+        "Audio Sink": {
             "enabled": true,
-            "module": "network_sink"
+            "module": "audio_sink"
         },
         "RTL-SDR Source": {
             "enabled": true,
@@ -65,7 +65,7 @@
     "streams": {
         "Radio": {
             "muted": false,
-            "sink": "Network",
+            "sink": "Audio",
             "volume": 1.0
         }
     },

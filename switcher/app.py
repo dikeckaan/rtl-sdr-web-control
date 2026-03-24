@@ -1,37 +1,40 @@
 from flask import Flask, render_template, redirect, url_for, flash
 import subprocess
+import os
+
+BASE_DIR = os.environ.get("SDR_BASE_DIR", "/opt/sdr")
 
 app = Flask(__name__)
-app.secret_key = "sdr-switcher-key"
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "change-me")
 
 PROJECTS = {
     "openwebrx": {
         "name": "OpenWebRX",
-        "path": "/home/kaandikec/sdr/openwebrx/docker-compose.yml",
+        "path": f"{BASE_DIR}/openwebrx/docker-compose.yml",
         "description": "SDR Radyo Alicisi",
         "port": 8090,
     },
     "ultrafeeder": {
         "name": "Ultrafeeder ADS-B",
-        "path": "/home/kaandikec/sdr/ultrafeeder/docker-compose.yml",
+        "path": f"{BASE_DIR}/ultrafeeder/docker-compose.yml",
         "description": "Ucak Takip (Ultrafeeder + PiAware + FR24)",
         "port": 8090,
     },
     "phantomsdr": {
         "name": "PhantomSDR",
-        "path": "/home/kaandikec/sdr/phantomsdr/docker-compose.yml",
+        "path": f"{BASE_DIR}/phantomsdr/docker-compose.yml",
         "description": "Web Tabanli SDR Waterfall",
         "port": 8090,
     },
     "shinysdr": {
         "name": "ShinySDR",
-        "path": "/home/kaandikec/sdr/shinysdr/docker-compose.yml",
+        "path": f"{BASE_DIR}/shinysdr/docker-compose.yml",
         "description": "Gelismis SDR Alici Arayuzu",
         "port": 8090,
     },
     "sdrpp": {
         "name": "SDR++ (noVNC)",
-        "path": "/home/kaandikec/sdr/sdrpp-server/docker-compose.yml",
+        "path": f"{BASE_DIR}/sdrpp-server/docker-compose.yml",
         "description": "SDR++ Masaustu - Tarayicidan Erisim",
         "port": 8090,
     },
@@ -53,9 +56,12 @@ def get_status():
     return status
 
 
+ENV_FILE = os.path.join(BASE_DIR, ".env")
+
+
 def compose_action(project, action):
     proj = PROJECTS[project]
-    cmd = ["docker", "compose", "-f", proj["path"]] + action.split()
+    cmd = ["docker", "compose", "--env-file", ENV_FILE, "-f", proj["path"]] + action.split()
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
     return result.returncode == 0, result.stderr
 
