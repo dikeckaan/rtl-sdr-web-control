@@ -2,6 +2,7 @@
 port=9002
 html_root="html-svelte/dist/"
 otherusers=1
+title="PhantomSDR - 145 MHz VHF"
 
 [input]
 sps=2880000
