@@ -1,0 +1,10 @@
+services:
+  multimon-ng:
+    build: /home/kaandikec/sdr/multimon-ng
+    container_name: multimon-ng-decoder
+    ports:
+      - "8090:8090"
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+    privileged: true
+    restart: unless-stopped

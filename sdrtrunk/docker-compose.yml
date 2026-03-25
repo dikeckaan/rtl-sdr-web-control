@@ -1,0 +1,10 @@
+services:
+  sdrtrunk:
+    build: /home/kaandikec/sdr/sdrtrunk
+    container_name: sdrtrunk-novnc
+    ports:
+      - "8090:8090"
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+    privileged: true
+    restart: unless-stopped

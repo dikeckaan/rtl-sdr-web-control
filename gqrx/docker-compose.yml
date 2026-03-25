@@ -1,0 +1,10 @@
+services:
+  gqrx:
+    build: /home/kaandikec/sdr/gqrx
+    container_name: gqrx-novnc
+    ports:
+      - "8090:8090"
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+    privileged: true
+    restart: unless-stopped

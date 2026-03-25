@@ -1,0 +1,10 @@
+services:
+  rtl433:
+    build: /home/kaandikec/sdr/rtl433
+    container_name: rtl433-monitor
+    ports:
+      - "8090:8090"
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+    privileged: true
+    restart: unless-stopped

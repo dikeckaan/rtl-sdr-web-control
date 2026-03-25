@@ -1,0 +1,9 @@
+services:
+  inspectrum:
+    build: /home/kaandikec/sdr/inspectrum
+    container_name: inspectrum-novnc
+    ports:
+      - "8090:8090"
+    volumes:
+      - /home/kaandikec/sdr/inspectrum/recordings:/root/recordings
+    restart: unless-stopped

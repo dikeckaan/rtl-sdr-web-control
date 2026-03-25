@@ -1,0 +1,13 @@
+services:
+  wximgtools:
+    build: /home/kaandikec/sdr/wximgtools
+    container_name: wx-satellite-rx
+    ports:
+      - "8090:8090"
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+    privileged: true
+    volumes:
+      - /home/kaandikec/sdr/wximgtools/recordings:/opt/recordings
+      - /home/kaandikec/sdr/wximgtools/images:/opt/images
+    restart: unless-stopped

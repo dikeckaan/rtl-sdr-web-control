@@ -9,27 +9,67 @@ ENV_FILE = os.path.join(BASE_DIR, ".env")
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "change-me")
 
+CATEGORIES = {
+    "receivers": {
+        "name": "Genel SDR Alicilar",
+        "icon": "📡",
+        "description": "FM, AM, SSB ve diger modlari dinleme",
+    },
+    "digital": {
+        "name": "Dijital Sinyal Cozme",
+        "icon": "📻",
+        "description": "Blok tabanli sinyal isleme ve analiz",
+    },
+    "decoders": {
+        "name": "Dijital Mod Cozuculer",
+        "icon": "📶",
+        "description": "Pager, DTMF, DMR, P25, APRS cozumleme",
+    },
+    "tracking": {
+        "name": "Ucak & Arac Takip",
+        "icon": "✈️",
+        "description": "ADS-B ucak takip ve radar",
+    },
+    "satellite": {
+        "name": "Uydu & Hava Durumu",
+        "icon": "🛰️",
+        "description": "NOAA uydu goruntu alma",
+    },
+    "security": {
+        "name": "Guvenlik & Arastirma",
+        "icon": "🛡️",
+        "description": "RF analiz ve protokol cozumleme",
+    },
+}
+
 PROJECTS = {
+    # --- Genel SDR Alicilar ---
     "openwebrx": {
         "name": "OpenWebRX",
         "path": f"{BASE_DIR}/openwebrx/docker-compose.yml",
         "description": "Web tabanli SDR alici - 968 profil ile tam spektrum tarama",
         "icon": "radio",
         "port": 8090,
+        "category": "receivers",
+        "badge": "Web UI",
     },
     "sdrpp": {
         "name": "SDR++",
         "path": f"{BASE_DIR}/sdrpp-server/docker-compose.yml",
-        "description": "Profesyonel masaustu SDR yazilimi - noVNC ile uzaktan erisim",
+        "description": "Profesyonel masaustu SDR yazilimi - noVNC ile uzaktan erisim + ses",
         "icon": "desktop",
         "port": 8090,
+        "category": "receivers",
+        "badge": "noVNC",
     },
     "phantomsdr": {
         "name": "PhantomSDR",
         "path": f"{BASE_DIR}/phantomsdr/docker-compose.yml",
-        "description": "Yuksek performansli waterfall gosterimi - coklu kullanici",
+        "description": "Yuksek performansli waterfall gosterimi - coklu kullanici destegi",
         "icon": "waterfall",
         "port": 8090,
+        "category": "receivers",
+        "badge": "Web UI",
     },
     "shinysdr": {
         "name": "ShinySDR",
@@ -37,13 +77,130 @@ PROJECTS = {
         "description": "Gelismis sinyal analizi ve demodulasyon araclari",
         "icon": "signal",
         "port": 8090,
+        "category": "receivers",
+        "badge": "Web UI",
     },
+    "gqrx": {
+        "name": "GQRX",
+        "path": f"{BASE_DIR}/gqrx/docker-compose.yml",
+        "description": "Linux'un en populer SDR alicisi - spektrum + waterfall + demodulasyon",
+        "icon": "gqrx",
+        "port": 8090,
+        "category": "receivers",
+        "badge": "noVNC",
+    },
+    "cubicsdr": {
+        "name": "CubicSDR",
+        "path": f"{BASE_DIR}/cubicsdr/docker-compose.yml",
+        "description": "Modern ve kullanici dostu SDR alici - SoapySDR destegi",
+        "icon": "cubic",
+        "port": 8090,
+        "category": "receivers",
+        "badge": "noVNC",
+    },
+    "sdrangel": {
+        "name": "SDRAngel",
+        "path": f"{BASE_DIR}/sdrangel/docker-compose.yml",
+        "description": "Her sey dahil SDR paketi - TX/RX, analiz, demod, spektrum",
+        "icon": "angel",
+        "port": 8090,
+        "category": "receivers",
+        "badge": "noVNC",
+    },
+    # --- Dijital Sinyal Cozme ---
+    "gnuradio": {
+        "name": "GNU Radio",
+        "path": f"{BASE_DIR}/gnuradio/docker-compose.yml",
+        "description": "Blok tabanli sinyal isleme - kendi alici/vericini tasarla",
+        "icon": "gnuradio",
+        "port": 8090,
+        "category": "digital",
+        "badge": "noVNC",
+    },
+    "inspectrum": {
+        "name": "Inspectrum",
+        "path": f"{BASE_DIR}/inspectrum/docker-compose.yml",
+        "description": "Kayitli sinyalleri detayli analiz - bit seviyesinde inceleme",
+        "icon": "inspect",
+        "port": 8090,
+        "category": "digital",
+        "badge": "noVNC",
+    },
+    # --- Dijital Mod Cozuculer ---
+    "multimon_ng": {
+        "name": "multimon-ng",
+        "path": f"{BASE_DIR}/multimon-ng/docker-compose.yml",
+        "description": "Pager, APRS, DTMF, FSK, Morse, POCSAG, FLEX cozuculeme",
+        "icon": "decoder",
+        "port": 8090,
+        "category": "decoders",
+        "badge": "Web UI",
+    },
+    "dsd": {
+        "name": "DSD",
+        "path": f"{BASE_DIR}/dsd/docker-compose.yml",
+        "description": "DMR, P25, NXDN, D-STAR dijital ses cozucu",
+        "icon": "voice",
+        "port": 8090,
+        "category": "decoders",
+        "badge": "Web UI",
+    },
+    "rtl433": {
+        "name": "rtl_433",
+        "path": f"{BASE_DIR}/rtl433/docker-compose.yml",
+        "description": "433 MHz ISM cihazlari izleme - termometre, sensor, anahtar",
+        "icon": "sensor",
+        "port": 8090,
+        "category": "decoders",
+        "badge": "Web UI",
+    },
+    "sdrtrunk": {
+        "name": "SDRTrunk",
+        "path": f"{BASE_DIR}/sdrtrunk/docker-compose.yml",
+        "description": "P25, DMR dijital telsiz dinleme - cok kanalli takip",
+        "icon": "trunk",
+        "port": 8090,
+        "category": "decoders",
+        "badge": "noVNC",
+    },
+    "op25": {
+        "name": "OP25",
+        "path": f"{BASE_DIR}/op25/docker-compose.yml",
+        "description": "Profesyonel P25 telsiz sistemi alicisi - web arayuzu",
+        "icon": "op25",
+        "port": 8090,
+        "category": "decoders",
+        "badge": "Web UI",
+    },
+    # --- Ucak Takip ---
     "ultrafeeder": {
         "name": "Ultrafeeder ADS-B",
         "path": f"{BASE_DIR}/ultrafeeder/docker-compose.yml",
         "description": "Ucak takip - FlightAware, Flightradar24 ve MLAT destegi",
         "icon": "plane",
         "port": 8090,
+        "category": "tracking",
+        "badge": "Web UI",
+    },
+    # --- Uydu ---
+    "wximgtools": {
+        "name": "NOAA Uydu Alici",
+        "path": f"{BASE_DIR}/wximgtools/docker-compose.yml",
+        "description": "NOAA hava uydularindan APT sinyal kaydi ve goruntu cozumleme",
+        "icon": "satellite",
+        "port": 8090,
+        "category": "satellite",
+        "badge": "Web UI",
+    },
+    # --- Guvenlik ---
+    "urh": {
+        "name": "Universal Radio Hacker",
+        "path": f"{BASE_DIR}/urh/docker-compose.yml",
+        "description": "Kablosuz cihaz analizi - RF capture, replay, protokol cozumleme",
+        "icon": "hacker",
+        "port": 8090,
+        "category": "security",
+        "badge": "noVNC",
     },
 }
 
@@ -91,8 +248,23 @@ def api_status():
             "icon": proj["icon"],
             "port": proj["port"],
             "running": running,
+            "category": proj["category"],
+            "badge": proj.get("badge", ""),
         })
-    return jsonify({"projects": projects, "active": active})
+
+    categories = []
+    for cat_id, cat_info in CATEGORIES.items():
+        cat_projects = [p for p in projects if p["category"] == cat_id]
+        if cat_projects:
+            categories.append({
+                "id": cat_id,
+                "name": cat_info["name"],
+                "icon": cat_info["icon"],
+                "description": cat_info["description"],
+                "projects": cat_projects,
+            })
+
+    return jsonify({"categories": categories, "active": active, "total": len(PROJECTS)})
 
 
 @app.route("/api/start/<project>", methods=["POST"])

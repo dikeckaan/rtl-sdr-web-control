@@ -1,0 +1,10 @@
+services:
+  sdrangel:
+    build: /home/kaandikec/sdr/sdrangel
+    container_name: sdrangel-novnc
+    ports:
+      - "8090:8090"
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+    privileged: true
+    restart: unless-stopped

@@ -1,0 +1,10 @@
+services:
+  urh:
+    build: /home/kaandikec/sdr/urh
+    container_name: urh-novnc
+    ports:
+      - "8090:8090"
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+    privileged: true
+    restart: unless-stopped

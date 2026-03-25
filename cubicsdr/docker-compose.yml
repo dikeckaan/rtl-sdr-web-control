@@ -1,0 +1,10 @@
+services:
+  cubicsdr:
+    build: /home/kaandikec/sdr/cubicsdr
+    container_name: cubicsdr-novnc
+    ports:
+      - "8090:8090"
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+    privileged: true
+    restart: unless-stopped

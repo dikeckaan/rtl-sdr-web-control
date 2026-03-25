@@ -1,0 +1,10 @@
+services:
+  dsd:
+    build: /home/kaandikec/sdr/dsd
+    container_name: dsd-decoder
+    ports:
+      - "8090:8090"
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+    privileged: true
+    restart: unless-stopped

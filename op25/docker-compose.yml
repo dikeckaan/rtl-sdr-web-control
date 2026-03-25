@@ -1,0 +1,10 @@
+services:
+  op25:
+    build: /home/kaandikec/sdr/op25
+    container_name: op25-receiver
+    ports:
+      - "8090:8090"
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+    privileged: true
+    restart: unless-stopped

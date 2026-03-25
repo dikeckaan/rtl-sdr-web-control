@@ -1,0 +1,12 @@
+services:
+  gnuradio:
+    build: /home/kaandikec/sdr/gnuradio
+    container_name: gnuradio-novnc
+    ports:
+      - "8090:8090"
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+    privileged: true
+    volumes:
+      - /home/kaandikec/sdr/gnuradio/flowgraphs:/root/flowgraphs
+    restart: unless-stopped

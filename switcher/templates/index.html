@@ -6,103 +6,302 @@
 <title>SDR Control Panel</title>
 <style>
 :root {
-  --bg: #0c0e14;
-  --surface: #151822;
-  --surface2: #1c2030;
-  --border: #252a3a;
+  --bg: #06080d;
+  --bg2: #0c0f16;
+  --surface: #121620;
+  --surface2: #181d2a;
+  --surface3: #1e2436;
+  --border: #252c3f;
+  --border-hover: #3a4260;
   --border-active: #3b82f6;
   --text: #e2e8f0;
   --text2: #94a3b8;
   --text3: #64748b;
+  --text4: #475569;
   --green: #22c55e;
-  --green-bg: rgba(34,197,94,0.1);
+  --green-bg: rgba(34,197,94,0.08);
+  --green-border: rgba(34,197,94,0.2);
   --red: #ef4444;
-  --red-bg: rgba(239,68,68,0.1);
+  --red-bg: rgba(239,68,68,0.08);
   --blue: #3b82f6;
-  --blue-bg: rgba(59,130,246,0.1);
+  --blue-bg: rgba(59,130,246,0.08);
   --amber: #f59e0b;
-  --amber-bg: rgba(245,158,11,0.1);
+  --amber-bg: rgba(245,158,11,0.08);
+  --purple: #a855f7;
+  --purple-bg: rgba(168,85,247,0.08);
+  --cyan: #06b6d4;
+  --cyan-bg: rgba(6,182,212,0.08);
   --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.3);
 }
 * { margin:0; padding:0; box-sizing:border-box; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'SF Pro Display', 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.5;
+}
 
-.container { max-width: 900px; margin: 0 auto; padding: 24px 16px; }
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+.container { max-width: 1100px; margin: 0 auto; padding: 20px 16px 40px; }
 
 /* Header */
-header { text-align: center; margin-bottom: 32px; }
-header h1 { font-size: 1.5em; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 4px; }
+header {
+  text-align: center;
+  padding: 32px 0 28px;
+  position: relative;
+}
+header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--blue), transparent);
+}
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.logo-icon {
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, var(--blue), #6366f1);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  box-shadow: 0 4px 16px rgba(59,130,246,0.25);
+}
+header h1 {
+  font-size: 1.6em;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
 header h1 span { color: var(--blue); }
-header p { color: var(--text3); font-size: 0.85em; }
-.hw-badge { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px;
-  background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
-  padding: 5px 14px; font-size: 0.75em; color: var(--text2); }
-.hw-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+.subtitle { color: var(--text3); font-size: 0.85em; margin-top: 2px; }
+
+/* Status bar */
+.status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+.hw-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-size: 0.75em;
+  color: var(--text2);
+}
+.hw-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+.counter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-size: 0.75em;
+  color: var(--text2);
+}
+.counter b { color: var(--blue); }
 
 /* Toast */
-#toast { position: fixed; top: 20px; right: 20px; z-index: 100; display: flex; flex-direction: column; gap: 8px; }
-.toast-item { padding: 12px 20px; border-radius: 8px; font-size: 0.85em; font-weight: 500;
-  animation: slideIn 0.3s ease; backdrop-filter: blur(12px); }
-.toast-item.success { background: var(--green-bg); color: var(--green); border: 1px solid rgba(34,197,94,0.2); }
+#toast { position: fixed; top: 16px; right: 16px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; max-width: 360px; }
+.toast-item {
+  padding: 12px 18px;
+  border-radius: var(--radius-sm);
+  font-size: 0.82em;
+  font-weight: 500;
+  animation: slideIn 0.3s ease;
+  backdrop-filter: blur(16px);
+  box-shadow: var(--shadow);
+}
+.toast-item.success { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
 .toast-item.error { background: var(--red-bg); color: var(--red); border: 1px solid rgba(239,68,68,0.2); }
-@keyframes slideIn { from { transform: translateX(100%); opacity:0; } to { transform: translateX(0); opacity:1; } }
+@keyframes slideIn { from { transform: translateX(120%); opacity:0; } to { transform: translateX(0); opacity:1; } }
 
-/* Cards */
-.grid { display: flex; flex-direction: column; gap: 12px; }
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-  padding: 20px 24px; display: flex; align-items: center; gap: 20px;
-  transition: border-color 0.2s, box-shadow 0.2s; position: relative; overflow: hidden; }
-.card:hover { border-color: #363d52; }
-.card.active { border-color: var(--border-active); box-shadow: 0 0 0 1px var(--border-active), 0 4px 24px rgba(59,130,246,0.08); }
-.card.loading { opacity: 0.6; pointer-events: none; }
+/* Category sections */
+.category {
+  margin-top: 28px;
+}
+.category-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.category-icon { font-size: 1.2em; }
+.category-name { font-size: 1.05em; font-weight: 600; }
+.category-desc { color: var(--text4); font-size: 0.78em; margin-left: auto; }
+.category-count {
+  background: var(--surface2);
+  color: var(--text3);
+  font-size: 0.7em;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+}
 
-.card-icon { width: 48px; height: 48px; border-radius: 10px; display: flex; align-items: center;
-  justify-content: center; font-size: 22px; flex-shrink: 0; }
-.card-icon.radio { background: var(--blue-bg); }
-.card-icon.desktop { background: rgba(168,85,247,0.1); }
-.card-icon.waterfall { background: rgba(6,182,212,0.1); }
-.card-icon.signal { background: var(--amber-bg); }
-.card-icon.plane { background: var(--green-bg); }
+/* Card grid */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 10px;
+}
 
+/* Card */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: all 0.2s ease;
+  position: relative;
+  cursor: default;
+}
+.card:hover { border-color: var(--border-hover); background: var(--surface2); }
+.card.active {
+  border-color: var(--border-active);
+  background: linear-gradient(135deg, rgba(59,130,246,0.04), rgba(99,102,241,0.04));
+  box-shadow: 0 0 0 1px var(--border-active), 0 4px 20px rgba(59,130,246,0.08);
+}
+.card.loading { opacity: 0.5; pointer-events: none; }
+
+/* Card icon */
+.card-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+/* Card body */
 .card-body { flex: 1; min-width: 0; }
-.card-title { font-size: 1em; font-weight: 600; margin-bottom: 2px; display: flex; align-items: center; gap: 8px; }
-.card-desc { color: var(--text3); font-size: 0.8em; line-height: 1.4; }
-
-.status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.card-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+.card-title { font-size: 0.92em; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.status-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
 .status-dot.on { background: var(--green); box-shadow: 0 0 8px rgba(34,197,94,0.5); }
-.status-dot.off { background: var(--text3); }
+.status-dot.off { background: var(--text4); }
+.card-badge {
+  font-size: 0.6em;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+.badge-web { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+.badge-novnc { background: var(--purple-bg); color: var(--purple); border: 1px solid rgba(168,85,247,0.2); }
+.card-desc { color: var(--text4); font-size: 0.75em; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-.card-actions { display: flex; gap: 8px; flex-shrink: 0; }
+/* Card actions */
+.card-actions { display: flex; gap: 6px; flex-shrink: 0; }
 
-button { border: none; border-radius: 8px; font-size: 0.8em; font-weight: 600; cursor: pointer;
-  padding: 8px 16px; transition: all 0.15s; font-family: inherit; }
+button {
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.76em;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 7px 14px;
+  transition: all 0.15s;
+  font-family: inherit;
+  white-space: nowrap;
+}
 button:active { transform: scale(0.96); }
 
 .btn-launch { background: var(--blue); color: #fff; }
-.btn-launch:hover { background: #2563eb; }
-.btn-open { background: var(--green); color: #fff; padding: 8px 14px; }
+.btn-launch:hover { background: #2563eb; box-shadow: 0 2px 8px rgba(59,130,246,0.3); }
+.btn-open { background: var(--green); color: #fff; }
 .btn-open:hover { background: #16a34a; }
-.btn-stop { background: var(--surface2); color: var(--red); border: 1px solid rgba(239,68,68,0.2); }
+.btn-stop { background: var(--surface3); color: var(--red); }
 .btn-stop:hover { background: var(--red-bg); }
-.btn-restart { background: var(--surface2); color: var(--amber); border: 1px solid rgba(245,158,11,0.2); }
+.btn-restart { background: var(--surface3); color: var(--amber); }
 .btn-restart:hover { background: var(--amber-bg); }
 
 /* Footer */
-.footer { text-align: center; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
-.btn-danger { background: var(--surface); color: var(--red); border: 1px solid rgba(239,68,68,0.15);
-  padding: 10px 28px; font-size: 0.85em; border-radius: 8px; }
+.footer {
+  text-align: center;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+.btn-danger {
+  background: var(--surface);
+  color: var(--red);
+  border: 1px solid rgba(239,68,68,0.15);
+  padding: 10px 32px;
+  font-size: 0.82em;
+  border-radius: var(--radius-sm);
+}
 .btn-danger:hover { background: var(--red-bg); border-color: rgba(239,68,68,0.3); }
-.footer-note { color: var(--text3); font-size: 0.7em; margin-top: 12px; }
+.footer-note { color: var(--text4); font-size: 0.7em; margin-top: 10px; max-width: 500px; margin-left: auto; margin-right: auto; }
 
 /* Spinner */
-.spinner { width: 14px; height: 14px; border: 2px solid transparent; border-top-color: currentColor;
-  border-radius: 50%; animation: spin 0.6s linear infinite; display: inline-block; vertical-align: middle; }
+.spinner {
+  width: 12px; height: 12px;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+}
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* Loading skeleton */
+.skeleton {
+  background: linear-gradient(90deg, var(--surface) 25%, var(--surface2) 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius);
+  height: 74px;
+}
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
 /* Responsive */
-@media (max-width: 600px) {
-  .card { flex-direction: column; text-align: center; gap: 12px; padding: 16px; }
-  .card-actions { justify-content: center; flex-wrap: wrap; }
+@media (max-width: 700px) {
+  .card-grid { grid-template-columns: 1fr; }
+  .card { padding: 14px; }
+  .card-desc { display: none; }
+  .category-desc { display: none; }
 }
 </style>
 </head>
@@ -110,32 +309,62 @@ button:active { transform: scale(0.96); }
 
 <div class="container">
   <header>
-    <h1><span>SDR</span> Control Panel</h1>
-    <p>Nooelec NESDR SMArt v5 &mdash; 24 MHz - 1.766 GHz</p>
-    <div class="hw-badge"><span class="hw-dot"></span> RTL2838 USB</div>
+    <div class="logo">
+      <div class="logo-icon">
+        <svg width="24" height="24" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M4.9 19.1A13 13 0 0 1 12 2a13 13 0 0 1 7.1 17.1"/>
+          <path d="M7.8 16.2A8 8 0 0 1 12 5a8 8 0 0 1 4.2 11.2"/>
+          <circle cx="12" cy="17" r="2"/>
+        </svg>
+      </div>
+      <h1><span>SDR</span> Control Panel</h1>
+    </div>
+    <p class="subtitle">Nooelec NESDR SMArt v5 &mdash; 24 MHz - 1.766 GHz</p>
+    <div class="status-bar">
+      <div class="hw-badge"><span class="hw-dot"></span> RTL2838 USB</div>
+      <div class="counter"><span id="totalApps">0</span> uygulama &middot; <b id="activeLabel">Hepsi kapali</b></div>
+    </div>
   </header>
 
   <div id="toast"></div>
-  <div id="grid" class="grid"></div>
+  <div id="content">
+    <div class="card-grid">
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+    </div>
+  </div>
 
   <div class="footer">
     <button class="btn-danger" onclick="stopAll()">Tum Servisleri Durdur</button>
-    <p class="footer-note">Ayni anda yalnizca bir SDR servisi calisabilir. Yeni servis baslatildiginda aktif olan otomatik durdurulur.</p>
+    <p class="footer-note">Ayni anda yalnizca bir SDR servisi calisabilir (paylasimli USB cihazi). Yeni servis baslatildiginda aktif olan otomatik durdurulur.</p>
   </div>
 </div>
 
 <script>
-const ICONS = {
-  radio: '<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4.9 19.1A13 13 0 0 1 12 2a13 13 0 0 1 7.1 17.1"/><path d="M7.8 16.2A8 8 0 0 1 12 5a8 8 0 0 1 4.2 11.2"/><circle cx="12" cy="17" r="2"/></svg>',
-  desktop: '<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
-  waterfall: '<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12h4l3-9 4 18 3-9h6"/></svg>',
-  signal: '<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 20h.01"/><path d="M7 20v-4"/><path d="M12 20v-8"/><path d="M17 20V8"/><path d="M22 20V4"/></svg>',
-  plane: '<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>',
+// Icon colors per category/type
+const ICON_STYLES = {
+  radio:     { bg: 'var(--blue-bg)', color: '#3b82f6', svg: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4.9 19.1A13 13 0 0 1 12 2a13 13 0 0 1 7.1 17.1"/><path d="M7.8 16.2A8 8 0 0 1 12 5a8 8 0 0 1 4.2 11.2"/><circle cx="12" cy="17" r="2"/></svg>' },
+  desktop:   { bg: 'var(--purple-bg)', color: '#a855f7', svg: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>' },
+  waterfall: { bg: 'var(--cyan-bg)', color: '#06b6d4', svg: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12h4l3-9 4 18 3-9h6"/></svg>' },
+  signal:    { bg: 'var(--amber-bg)', color: '#f59e0b', svg: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 20h.01"/><path d="M7 20v-4"/><path d="M12 20v-8"/><path d="M17 20V8"/><path d="M22 20V4"/></svg>' },
+  plane:     { bg: 'var(--green-bg)', color: '#22c55e', svg: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>' },
+  gqrx:      { bg: 'var(--blue-bg)', color: '#60a5fa', svg: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/><path d="M8 11h6"/><path d="M11 8v6"/></svg>' },
+  cubic:     { bg: 'var(--cyan-bg)', color: '#22d3ee', svg: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>' },
+  angel:     { bg: 'var(--purple-bg)', color: '#c084fc', svg: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' },
+  gnuradio:  { bg: 'rgba(239,68,68,0.08)', color: '#f87171', svg: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>' },
+  inspect:   { bg: 'var(--amber-bg)', color: '#fbbf24', svg: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg>' },
+  decoder:   { bg: 'var(--green-bg)', color: '#4ade80', svg: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>' },
+  voice:     { bg: 'var(--purple-bg)', color: '#a78bfa', svg: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>' },
+  sensor:    { bg: 'var(--cyan-bg)', color: '#2dd4bf', svg: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 4a4 4 0 1 0-4 4"/><path d="M14 12a4 4 0 1 0-4 4"/><path d="M14 20a4 4 0 1 0-4 4"/></svg>' },
+  trunk:     { bg: 'var(--amber-bg)', color: '#fb923c', svg: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 16.1A5 5 0 0 1 5.9 20M2 12.05A9 9 0 0 1 9.95 20M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"/><line x1="2" y1="20" x2="2.01" y2="20"/></svg>' },
+  op25:      { bg: 'rgba(239,68,68,0.08)', color: '#fb7185', svg: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>' },
+  satellite: { bg: 'var(--cyan-bg)', color: '#67e8f9', svg: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M7.76 16.24a6 6 0 0 1 0-8.49"/><path d="M4.93 19.07a10 10 0 0 1 0-14.14"/></svg>' },
+  hacker:    { bg: 'rgba(239,68,68,0.08)', color: '#f43f5e', svg: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>' },
 };
 
-const COLORS = { radio: '#3b82f6', desktop: '#a855f7', waterfall: '#06b6d4', signal: '#f59e0b', plane: '#22c55e' };
-
-let projects = [];
+let categories = [];
 let busy = {};
 
 function isRemote() {
@@ -156,38 +385,68 @@ function toast(msg, type) {
 }
 
 function render() {
-  const grid = document.getElementById('grid');
-  grid.innerHTML = projects.map(p => {
-    const loading = busy[p.id];
-    const color = COLORS[p.icon] || '#3b82f6';
-    return `
-    <div class="card ${p.running ? 'active' : ''} ${loading ? 'loading' : ''}">
-      <div class="card-icon ${p.icon}" style="color:${color}">${ICONS[p.icon] || ''}</div>
-      <div class="card-body">
-        <div class="card-title">
-          <span class="status-dot ${p.running ? 'on' : 'off'}"></span>
-          ${p.name}
-        </div>
-        <div class="card-desc">${p.description}</div>
+  const content = document.getElementById('content');
+  if (!categories.length) return;
+
+  let activeApp = null;
+  let total = 0;
+  categories.forEach(cat => {
+    cat.projects.forEach(p => {
+      total++;
+      if (p.running) activeApp = p.name;
+    });
+  });
+
+  document.getElementById('totalApps').textContent = total;
+  document.getElementById('activeLabel').textContent = activeApp ? activeApp + ' aktif' : 'Hepsi kapali';
+  if (activeApp) document.getElementById('activeLabel').style.color = 'var(--green)';
+  else document.getElementById('activeLabel').style.color = '';
+
+  content.innerHTML = categories.map(cat => `
+    <div class="category">
+      <div class="category-header">
+        <span class="category-icon">${cat.icon}</span>
+        <span class="category-name">${cat.name}</span>
+        <span class="category-count">${cat.projects.length}</span>
+        <span class="category-desc">${cat.description}</span>
       </div>
-      <div class="card-actions">
-        ${p.running ? `
-          <a href="${getAppUrl(p)}" target="_blank"><button class="btn-open">Ac</button></a>
-          <button class="btn-restart" onclick="act('restart','${p.id}')">${loading ? '<span class="spinner"></span>' : 'Yeniden Baslat'}</button>
-          <button class="btn-stop" onclick="act('stop','${p.id}')">${loading ? '<span class="spinner"></span>' : 'Durdur'}</button>
-        ` : `
-          <button class="btn-launch" onclick="act('start','${p.id}')">${loading ? '<span class="spinner"></span>' : 'Baslat'}</button>
-        `}
+      <div class="card-grid">
+        ${cat.projects.map(p => {
+          const loading = busy[p.id];
+          const style = ICON_STYLES[p.icon] || ICON_STYLES.radio;
+          const badgeClass = p.badge === 'noVNC' ? 'badge-novnc' : 'badge-web';
+          return `
+          <div class="card ${p.running ? 'active' : ''} ${loading ? 'loading' : ''}">
+            <div class="card-icon" style="background:${style.bg};color:${style.color}">${style.svg}</div>
+            <div class="card-body">
+              <div class="card-top">
+                <span class="status-dot ${p.running ? 'on' : 'off'}"></span>
+                <span class="card-title">${p.name}</span>
+                ${p.badge ? `<span class="card-badge ${badgeClass}">${p.badge}</span>` : ''}
+              </div>
+              <div class="card-desc">${p.description}</div>
+            </div>
+            <div class="card-actions">
+              ${p.running ? `
+                <a href="${getAppUrl(p)}" target="_blank"><button class="btn-open">Ac</button></a>
+                <button class="btn-restart" onclick="act('restart','${p.id}')">${loading ? '<span class="spinner"></span>' : '&#x21bb;'}</button>
+                <button class="btn-stop" onclick="act('stop','${p.id}')">${loading ? '<span class="spinner"></span>' : 'Durdur'}</button>
+              ` : `
+                <button class="btn-launch" onclick="act('start','${p.id}')">${loading ? '<span class="spinner"></span>' : 'Baslat'}</button>
+              `}
+            </div>
+          </div>`;
+        }).join('')}
       </div>
-    </div>`;
-  }).join('');
+    </div>
+  `).join('');
 }
 
 async function fetchStatus() {
   try {
     const r = await fetch('/api/status');
     const data = await r.json();
-    projects = data.projects;
+    categories = data.categories;
     render();
   } catch(e) {}
 }
