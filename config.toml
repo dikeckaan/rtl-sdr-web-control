@@ -173,8 +173,8 @@ name = "Türk Telekom"
 # ─── Docker Services ─────────────────────────────────────
 [docker_services.openwebrx]
 name = "OpenWebRX"
-image = "jketterl/openwebrx:stable"
-port = 8073
+compose_file = "openwebrx/docker-compose.yml"
+port = 8090
 description = "Web tabanlı SDR radyo alıcısı"
 
 [docker_services.ultrafeeder]
@@ -185,14 +185,14 @@ description = "Uçak takip sistemi (ADS-B)"
 
 [docker_services.phantomsdr]
 name = "PhantomSDR"
-image = "simonblandford/phantomsdr:latest"
-port = 9002
+compose_file = "phantomsdr/docker-compose.yml"
+port = 8090
 description = "Web tabanlı SDR waterfall"
 
 [docker_services.shinysdr]
 name = "ShinySDR"
-image = "jeffersonjhunt/shinysdr:linux-arm64v8-v1.4.0"
-port = 8100
+compose_file = "shinysdr/docker-compose.yml"
+port = 8090
 description = "Gelişmiş SDR alıcı arayüzü"
 
 [docker_services.sdrpp]

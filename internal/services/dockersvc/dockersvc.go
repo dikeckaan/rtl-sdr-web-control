@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"path/filepath"
 	"sync"
 
@@ -21,6 +22,7 @@ type Service struct {
 	client     *docker.Client
 	status     services.Status
 	projectDir string
+	hasCompose bool
 }
 
 func New(id string, cfg config.DockerService, client *docker.Client, baseDir string) *Service {
@@ -31,12 +33,23 @@ func New(id string, cfg config.DockerService, client *docker.Client, baseDir str
 		projectDir = filepath.Join(baseDir, id)
 	}
 
+	// Auto-detect: if no compose_file configured but docker-compose.yml exists in project dir, use it
+	hasCompose := cfg.ComposeFile != ""
+	if !hasCompose {
+		composePath := filepath.Join(projectDir, "docker-compose.yml")
+		if _, err := os.Stat(composePath); err == nil {
+			hasCompose = true
+			log.Printf("[docker:%s] Auto-detected docker-compose.yml in %s", id, projectDir)
+		}
+	}
+
 	return &Service{
 		id:         id,
 		cfg:        cfg,
 		client:     client,
 		status:     services.StatusStopped,
 		projectDir: projectDir,
+		hasCompose: hasCompose,
 	}
 }
 
@@ -70,13 +83,14 @@ func (s *Service) Start(ctx context.Context) error {
 	s.status = services.StatusStarting
 
 	var err error
-	if s.cfg.ComposeFile != "" || s.cfg.Image == "" {
+	if s.hasCompose {
 		err = s.client.ComposeUp(ctx, s.projectDir)
 	} else {
+		hostPort := itoa(s.cfg.Port)
 		err = s.client.RunContainer(ctx, docker.ContainerOpts{
 			Name:       "sdr-" + s.id,
 			Image:      s.cfg.Image,
-			Ports:      []string{"8090:" + itoa(s.cfg.Port)},
+			Ports:      []string{hostPort + ":" + itoa(s.cfg.Port)},
 			Devices:    []string{"/dev/bus/usb:/dev/bus/usb"},
 			Privileged: true,
 			Restart:    "unless-stopped",
@@ -101,7 +115,7 @@ func (s *Service) Stop(ctx context.Context) error {
 	s.status = services.StatusStopping
 
 	var err error
-	if s.cfg.ComposeFile != "" || s.cfg.Image == "" {
+	if s.hasCompose {
 		err = s.client.ComposeDown(ctx, s.projectDir)
 	} else {
 		err = s.client.StopContainer(ctx, "sdr-"+s.id)
@@ -124,7 +138,7 @@ func (s *Service) RefreshStatus(ctx context.Context) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if s.cfg.ComposeFile != "" || s.cfg.Image == "" {
+	if s.hasCompose {
 		statuses, err := s.client.ComposeStatus(ctx, s.projectDir)
 		if err != nil || len(statuses) == 0 {
 			s.status = services.StatusStopped

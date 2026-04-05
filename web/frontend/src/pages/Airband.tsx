@@ -2,114 +2,80 @@ import { useEffect, useState } from 'react';
 import { api } from '../api/client';
 
 interface Channel {
-  id: number;
+  index: number;
   name: string;
-  frequency: number;
-  active: boolean;
-  signal_strength?: number;
+  freq: number;
+  modulation: string;
 }
-
-interface AirbandStatus {
-  channels: Channel[];
-  status: string;
-}
-
-const DEFAULT_CHANNELS: Channel[] = [
-  { id: 1, name: 'Istanbul Tower', frequency: 118.100, active: false },
-  { id: 2, name: 'Istanbul Approach', frequency: 120.700, active: false },
-  { id: 3, name: 'Istanbul Ground', frequency: 121.900, active: false },
-  { id: 4, name: 'Istanbul ATIS', frequency: 128.025, active: false },
-];
 
 export default function Airband() {
-  const [channels, setChannels] = useState<Channel[]>(DEFAULT_CHANNELS);
+  const [channels, setChannels] = useState<Channel[]>([]);
   const [status, setStatus] = useState('stopped');
 
-  const fetchStatus = async () => {
+  const fetchChannels = async () => {
     try {
-      const res = await api<AirbandStatus>('/airband/status');
-      setChannels(res.channels ?? DEFAULT_CHANNELS);
+      const res = await api<{ channels: Channel[]; status: string }>('/airband/channels');
+      setChannels(res.channels || []);
       setStatus(res.status);
-    } catch {
-      /* ignore */
-    }
+    } catch { /* */ }
   };
 
   useEffect(() => {
-    fetchStatus();
-    const interval = setInterval(fetchStatus, 5000);
+    fetchChannels();
+    const interval = setInterval(fetchChannels, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  const isRunning = status === 'running';
 
   return (
     <div>
       <div className="page-header">
         <div className="flex-between">
           <div>
-            <h2>✈️ Airband</h2>
-            <p>Aviation radio monitoring - multi-channel receiver</p>
+            <h2>✈️ Havacılık Bandı</h2>
+            <p>İstanbul havalimanı frekansları</p>
           </div>
-          <span className={`badge badge-${status === 'running' ? 'running' : 'stopped'}`}>
+          <span className={`badge badge-${isRunning ? 'running' : 'stopped'}`}>
             <span className="badge-dot" />
-            {status}
+            {isRunning ? 'Dinleniyor' : 'Durdu'}
           </span>
         </div>
       </div>
 
       <div className="grid-2">
         {channels.map((ch) => (
-          <div className="card" key={ch.id}>
+          <div className="card" key={ch.index}>
             <div className="card-header">
               <div>
-                <div className="card-title">{ch.name}</div>
+                <div className="card-title">✈️ {ch.name}</div>
                 <div className="font-mono text-sm text-muted" style={{ marginTop: 2 }}>
-                  {ch.frequency.toFixed(3)} MHz
+                  {ch.freq.toFixed(3)} MHz · {ch.modulation.toUpperCase()}
                 </div>
               </div>
-              <span className={`badge ${ch.active ? 'badge-running' : 'badge-stopped'}`}>
-                <span className="badge-dot" />
-                {ch.active ? 'Active' : 'Idle'}
-              </span>
             </div>
 
-            {/* Signal Strength Bar */}
-            <div style={{ marginBottom: 12 }}>
-              <div className="text-sm text-muted" style={{ marginBottom: 4 }}>
-                Signal
-              </div>
-              <div
-                style={{
-                  width: '100%',
-                  height: 6,
-                  background: 'var(--bg)',
-                  borderRadius: 3,
-                  overflow: 'hidden',
-                }}
-              >
-                <div
-                  style={{
-                    width: `${ch.signal_strength ?? 0}%`,
-                    height: '100%',
-                    background: ch.active
-                      ? 'var(--success)'
-                      : 'var(--border)',
-                    borderRadius: 3,
-                    transition: 'width 0.5s',
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* Audio Player */}
             <div className="audio-player">
               <audio
                 controls
-                src={`/api/v1/airband/stream/${ch.id}`}
+                src={isRunning ? `/api/v1/airband/stream/${ch.index}` : undefined}
                 style={{ width: '100%' }}
               />
             </div>
+            {!isRunning && (
+              <div style={{ color: 'var(--text-muted)', fontSize: 12, marginTop: 8, textAlign: 'center' }}>
+                Servisi başlatın
+              </div>
+            )}
           </div>
         ))}
+
+        {channels.length === 0 && (
+          <div className="card" style={{ gridColumn: '1/-1', textAlign: 'center', padding: 40 }}>
+            <div style={{ fontSize: 48, marginBottom: 12 }}>✈️</div>
+            <div className="text-muted">Kanal bilgisi yükleniyor...</div>
+          </div>
+        )}
       </div>
     </div>
   );

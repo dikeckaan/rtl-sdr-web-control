@@ -2,14 +2,6 @@ import { useState, useEffect, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, post, setToken } from '../api/client';
 
-interface AuthResponse {
-  token: string;
-}
-
-interface SetupCheck {
-  setup_required: boolean;
-}
-
 export default function Login() {
   const navigate = useNavigate();
   const [username, setUsername] = useState('');
@@ -17,13 +9,15 @@ export default function Login() {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [setupMode, setSetupMode] = useState(false);
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    api<SetupCheck>('/auth/setup-check')
+    api<{ setup_required: boolean }>('/auth/setup-check')
       .then((res) => {
-        if (res.setup_required) setSetupMode(true);
+        setSetupMode(res.setup_required);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setChecking(false));
   }, []);
 
   const handleSubmit = async (e: FormEvent) => {
@@ -31,35 +25,50 @@ export default function Login() {
     setError('');
     setSubmitting(true);
     try {
-      const endpoint = setupMode ? '/auth/setup' : '/auth/login';
-      const res = await post<AuthResponse>(endpoint, { username, password });
-      setToken(res.token);
-      navigate('/', { replace: true });
+      if (setupMode) {
+        const res = await post<{ token: string }>('/auth/setup', { username, password });
+        if (res.token) {
+          setToken(res.token);
+          navigate('/', { replace: true });
+        }
+      } else {
+        const res = await post<{ token: string }>('/auth/login', { username, password });
+        if (res.token) {
+          setToken(res.token);
+          navigate('/', { replace: true });
+        }
+      }
     } catch {
-      setError(setupMode ? 'Failed to create admin account.' : 'Invalid username or password.');
+      setError(setupMode ? 'Hesap oluşturulamadı.' : 'Kullanıcı adı veya şifre hatalı.');
     } finally {
       setSubmitting(false);
     }
   };
 
+  if (checking) {
+    return (
+      <div className="login-page">
+        <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>Yükleniyor...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="login-page">
       <div className="login-card">
-        <div style={{ textAlign: 'center', fontSize: 48, marginBottom: 16 }}>📡</div>
-        <h1>{setupMode ? 'Create Admin Account' : 'SDR Platform'}</h1>
+        <div style={{ textAlign: 'center', fontSize: 48, marginBottom: 8 }}>📡</div>
+        <h1>{setupMode ? 'Yönetici Hesabı Oluştur' : 'SDR Platform'}</h1>
         <p className="login-subtitle">
           {setupMode
-            ? 'Set up the first administrator account to get started.'
-            : 'Sign in to manage your SDR services.'}
+            ? 'Başlamak için bir yönetici hesabı oluşturun.'
+            : 'SDR servislerinizi yönetmek için giriş yapın.'}
         </p>
 
         {error && <div className="error-msg">{error}</div>}
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label className="form-label" htmlFor="username">
-              Username
-            </label>
+            <label className="form-label" htmlFor="username">Kullanıcı Adı</label>
             <input
               id="username"
               className="form-input"
@@ -72,17 +81,15 @@ export default function Login() {
             />
           </div>
           <div className="form-group">
-            <label className="form-label" htmlFor="password">
-              Password
-            </label>
+            <label className="form-label" htmlFor="password">Şifre</label>
             <input
               id="password"
               className="form-input"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="********"
-              autoComplete="current-password"
+              placeholder="••••••••"
+              autoComplete={setupMode ? 'new-password' : 'current-password'}
               required
             />
           </div>
@@ -92,7 +99,7 @@ export default function Login() {
             disabled={submitting}
             style={{ width: '100%', marginTop: 8 }}
           >
-            {submitting ? 'Please wait...' : setupMode ? 'Create Account' : 'Sign In'}
+            {submitting ? 'Lütfen bekleyin...' : setupMode ? 'Hesap Oluştur' : 'Giriş Yap'}
           </button>
         </form>
       </div>

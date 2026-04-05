@@ -22,9 +22,11 @@ export async function api<T = unknown>(path: string, opts: RequestInit = {}): Pr
 
   const res = await fetch(`${API_BASE}${path}`, { ...opts, headers });
 
-  if (res.status === 401) {
+  if (res.status === 401 && !path.startsWith('/auth/')) {
     clearToken();
-    window.location.href = '/login';
+    if (window.location.pathname !== '/login') {
+      window.location.href = '/login';
+    }
     throw new Error('Unauthorized');
   }
 

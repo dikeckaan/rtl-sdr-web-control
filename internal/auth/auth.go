@@ -80,8 +80,8 @@ func (m *Manager) DestroySession(token string) {
 
 func (m *Manager) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Skip auth for login endpoint and static files
-		if r.URL.Path == "/api/v1/auth/login" || r.URL.Path == "/api/v1/auth/setup" {
+		// Skip auth for login, setup, and setup-check endpoints
+		if r.URL.Path == "/api/v1/auth/login" || r.URL.Path == "/api/v1/auth/setup" || r.URL.Path == "/api/v1/auth/setup-check" {
 			next.ServeHTTP(w, r)
 			return
 		}

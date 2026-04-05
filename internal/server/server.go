@@ -53,6 +53,7 @@ func New(cfg *config.Config, database *db.DB, authMgr *auth.Manager, hub *ws.Hub
 	r.Post("/api/v1/auth/login", s.handleLogin)
 	r.Post("/api/v1/auth/logout", s.handleLogout)
 	r.Get("/api/v1/auth/me", s.handleMe)
+	r.Get("/api/v1/auth/setup-check", s.handleSetupCheck)
 	r.Post("/api/v1/auth/setup", s.handleSetup)
 
 	// Service management routes
@@ -194,6 +195,13 @@ func (s *Server) handleMe(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (s *Server) handleSetupCheck(w http.ResponseWriter, r *http.Request) {
+	count, _ := s.db.UserCount()
+	writeJSON(w, http.StatusOK, map[string]any{
+		"setup_required": count == 0,
+	})
+}
+
 func (s *Server) handleSetup(w http.ResponseWriter, r *http.Request) {
 	count, _ := s.db.UserCount()
 	if count > 0 {
@@ -221,7 +229,23 @@ func (s *Server) handleSetup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, map[string]string{"status": "setup complete"})
+	// Auto-login after setup
+	token := s.auth.CreateSession(req.Username, "admin")
+	http.SetCookie(w, &http.Cookie{
+		Name:     "sdr_session",
+		Value:    token,
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   86400,
+	})
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"status":   "setup complete",
+		"token":    token,
+		"username": req.Username,
+		"role":     "admin",
+	})
 }
 
 func (s *Server) handleListServices(w http.ResponseWriter, r *http.Request) {

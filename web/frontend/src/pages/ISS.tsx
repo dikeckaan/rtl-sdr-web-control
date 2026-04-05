@@ -8,34 +8,23 @@ import 'leaflet/dist/leaflet.css';
 interface ISSPosition {
   lat: number;
   lon: number;
-  altitude: number;
-  velocity: number;
+  alt: number;
   timestamp: string;
 }
 
 interface Pass {
   rise_time: string;
+  max_time: string;
   set_time: string;
-  max_elevation: number;
-  duration_seconds: number;
-  direction: string;
+  max_alt: number;
+  duration_sec: number;
+  visible: boolean;
 }
 
 interface Capture {
-  id: string;
   filename: string;
-  timestamp: string;
-  duration: number;
-  size_mb: number;
-  download_url: string;
-}
-
-interface ISSStatus {
-  position: ISSPosition;
-  passes: Pass[];
-  captures: Capture[];
-  recording: boolean;
-  station: { lat: number; lon: number };
+  size: number;
+  mod_time: string;
 }
 
 const issIcon = L.divIcon({
@@ -67,10 +56,9 @@ function ISSMarker({ position }: { position: ISSPosition }) {
         <div style={{ color: '#1e293b' }}>
           <strong>ISS</strong>
           <div style={{ fontSize: 12, marginTop: 4 }}>
-            <div>Lat: {position.lat.toFixed(4)}</div>
-            <div>Lon: {position.lon.toFixed(4)}</div>
-            <div>Alt: {position.altitude?.toFixed(1)} km</div>
-            <div>Speed: {position.velocity?.toFixed(0)} km/h</div>
+            <div>Enlem: {position.lat.toFixed(4)}</div>
+            <div>Boylam: {position.lon.toFixed(4)}</div>
+            <div>Yukseklik: {position.alt?.toFixed(1)} km</div>
           </div>
         </div>
       </Popup>
@@ -79,24 +67,31 @@ function ISSMarker({ position }: { position: ISSPosition }) {
 }
 
 export default function ISS() {
-  const [position, setPosition] = useState<ISSPosition>({ lat: 0, lon: 0, altitude: 408, velocity: 27600, timestamp: '' });
+  const [position, setPosition] = useState<ISSPosition>({ lat: 0, lon: 0, alt: 408, timestamp: '' });
   const [passes, setPasses] = useState<Pass[]>([]);
   const [captures, setCaptures] = useState<Capture[]>([]);
   const [recording, setRecording] = useState(false);
-  const [recDuration, setRecDuration] = useState('600');
-  const [stationPos, setStationPos] = useState({ lat: 41.0, lon: 29.0 });
+  const [recDuration, setRecDuration] = useState('300');
+  const [stationPos, setStationPos] = useState({ lat: 41.0, lon: 29.0, alt: 0 });
   const [countdown, setCountdown] = useState('');
   const [trail, setTrail] = useState<[number, number][]>([]);
   const wsRef = useRef<WebSocket | null>(null);
 
   const fetchData = async () => {
     try {
-      const res = await api<ISSStatus>('/iss/status');
-      if (res.position) setPosition(res.position);
-      if (res.passes) setPasses(res.passes);
-      if (res.captures) setCaptures(res.captures);
-      setRecording(res.recording ?? false);
-      if (res.station) setStationPos(res.station);
+      const [posRes, passRes, statusRes, capRes] = await Promise.all([
+        api<ISSPosition>('/iss/position').catch(() => null),
+        api<{ passes: Pass[]; station: { lat: number; lon: number; alt: number } }>('/iss/passes').catch(() => null),
+        api<{ status: string; recording: boolean; file: string }>('/iss/status').catch(() => null),
+        api<{ captures: Capture[] }>('/iss/captures').catch(() => null),
+      ]);
+      if (posRes) setPosition(posRes);
+      if (passRes) {
+        setPasses(passRes.passes ?? []);
+        if (passRes.station) setStationPos(passRes.station);
+      }
+      if (statusRes) setRecording(statusRes.recording ?? false);
+      if (capRes) setCaptures(capRes.captures ?? []);
     } catch {
       /* ignore */
     }
@@ -118,7 +113,7 @@ export default function ISS() {
     };
   }, []);
 
-  // Countdown timer for next pass
+  // Sonraki gecis icin geri sayim
   useEffect(() => {
     if (passes.length === 0) return;
 
@@ -127,12 +122,12 @@ export default function ISS() {
       const now = Date.now();
       const diff = nextRise - now;
       if (diff <= 0) {
-        setCountdown('NOW!');
+        setCountdown('SIMDI!');
       } else {
         const h = Math.floor(diff / 3600000);
         const m = Math.floor((diff % 3600000) / 60000);
         const s = Math.floor((diff % 60000) / 1000);
-        setCountdown(`${h}h ${m}m ${s}s`);
+        setCountdown(`${h}sa ${m}dk ${s}sn`);
       }
     }, 1000);
 
@@ -141,18 +136,8 @@ export default function ISS() {
 
   const startRecording = async () => {
     try {
-      await post('/iss/record/start', { duration: parseInt(recDuration, 10) });
+      await post('/iss/record', { duration: parseInt(recDuration, 10) });
       setRecording(true);
-    } catch {
-      /* ignore */
-    }
-  };
-
-  const stopRecording = async () => {
-    try {
-      await post('/iss/record/stop');
-      setRecording(false);
-      await fetchData();
     } catch {
       /* ignore */
     }
@@ -168,15 +153,22 @@ export default function ISS() {
     }
   };
 
+  const formatSize = (bytes: number) => {
+    if (!bytes) return '--';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
   return (
     <div>
       <div className="page-header">
-        <h2>🛰️ ISS Tracker</h2>
-        <p>Track the International Space Station and record passes</p>
+        <h2>ISS Takip</h2>
+        <p>Uluslararasi Uzay Istasyonu takibi ve gecis kaydi</p>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 16, marginBottom: 24 }}>
-        {/* Map */}
+        {/* Harita */}
         <div className="map-container" style={{ height: 420 }}>
           <MapContainer
             center={[position.lat || 41, position.lon || 29]}
@@ -191,7 +183,7 @@ export default function ISS() {
             <Marker position={[stationPos.lat, stationPos.lon]} icon={stationIcon}>
               <Popup>
                 <div style={{ color: '#1e293b' }}>
-                  <strong>Ground Station</strong>
+                  <strong>Yer Istasyonu</strong>
                   <div style={{ fontSize: 12 }}>{stationPos.lat.toFixed(4)}, {stationPos.lon.toFixed(4)}</div>
                 </div>
               </Popup>
@@ -202,34 +194,30 @@ export default function ISS() {
           </MapContainer>
         </div>
 
-        {/* Sidebar Info */}
+        {/* Yan Panel Bilgileri */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {/* ISS Info */}
+          {/* ISS Konumu */}
           <div className="card">
-            <div className="card-title" style={{ marginBottom: 12 }}>ISS Position</div>
+            <div className="card-title" style={{ marginBottom: 12 }}>ISS Konumu</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
               <div>
-                <div className="text-sm text-muted">Latitude</div>
+                <div className="text-sm text-muted">Enlem</div>
                 <div className="font-mono">{position.lat.toFixed(4)}</div>
               </div>
               <div>
-                <div className="text-sm text-muted">Longitude</div>
+                <div className="text-sm text-muted">Boylam</div>
                 <div className="font-mono">{position.lon.toFixed(4)}</div>
               </div>
               <div>
-                <div className="text-sm text-muted">Altitude</div>
-                <div className="font-mono">{position.altitude?.toFixed(1)} km</div>
-              </div>
-              <div>
-                <div className="text-sm text-muted">Speed</div>
-                <div className="font-mono">{position.velocity?.toFixed(0)} km/h</div>
+                <div className="text-sm text-muted">Yukseklik</div>
+                <div className="font-mono">{position.alt?.toFixed(1)} km</div>
               </div>
             </div>
           </div>
 
-          {/* Next Pass */}
+          {/* Sonraki Gecis */}
           <div className="card">
-            <div className="card-title" style={{ marginBottom: 12 }}>Next Pass</div>
+            <div className="card-title" style={{ marginBottom: 12 }}>Sonraki Gecis</div>
             {passes.length > 0 ? (
               <>
                 <div
@@ -237,7 +225,7 @@ export default function ISS() {
                   style={{
                     fontSize: 28,
                     fontWeight: 700,
-                    color: countdown === 'NOW!' ? 'var(--success)' : 'var(--primary)',
+                    color: countdown === 'SIMDI!' ? 'var(--success)' : 'var(--primary)',
                     textAlign: 'center',
                     padding: '8px 0',
                   }}
@@ -245,33 +233,30 @@ export default function ISS() {
                   {countdown}
                 </div>
                 <div className="text-sm text-muted text-center">
-                  Max El: {passes[0].max_elevation}&deg; | {passes[0].direction}
+                  Maks Yukseklik: {passes[0].max_alt}&deg; | {passes[0].visible ? 'Gorunur' : 'Gorunmez'}
                 </div>
               </>
             ) : (
-              <div className="text-muted text-center">No pass data available</div>
+              <div className="text-muted text-center">Gecis verisi mevcut degil</div>
             )}
           </div>
 
-          {/* Recording Controls */}
+          {/* Kayit Kontrolleri */}
           <div className="card">
-            <div className="card-title" style={{ marginBottom: 12 }}>Recording</div>
+            <div className="card-title" style={{ marginBottom: 12 }}>Kayit</div>
             {recording ? (
               <div>
                 <div className="flex-row mb-8" style={{ justifyContent: 'center' }}>
                   <span className="badge badge-running" style={{ fontSize: 14 }}>
                     <span className="badge-dot" />
-                    Recording...
+                    Kayit yapiliyor...
                   </span>
                 </div>
-                <button className="btn btn-danger" style={{ width: '100%' }} onClick={stopRecording}>
-                  Stop Recording
-                </button>
               </div>
             ) : (
               <div>
                 <div className="form-group">
-                  <label className="form-label">Duration (seconds)</label>
+                  <label className="form-label">Sure (saniye)</label>
                   <input
                     className="form-input"
                     type="number"
@@ -280,7 +265,7 @@ export default function ISS() {
                   />
                 </div>
                 <button className="btn btn-success" style={{ width: '100%' }} onClick={startRecording}>
-                  Start Recording
+                  Kaydi Baslat
                 </button>
               </div>
             )}
@@ -288,44 +273,46 @@ export default function ISS() {
         </div>
       </div>
 
-      {/* Pass Predictions Table */}
+      {/* Gecis Tahminleri Tablosu */}
       <div className="section">
-        <div className="section-title">Pass Predictions (Next 10)</div>
+        <div className="section-title">Gecis Tahminleri (Sonraki 10)</div>
         <div className="table-container">
           <table>
             <thead>
               <tr>
-                <th>Rise Time</th>
-                <th>Set Time</th>
-                <th>Max Elevation</th>
-                <th>Duration</th>
-                <th>Direction</th>
+                <th>Yukselme Zamani</th>
+                <th>Maks Zaman</th>
+                <th>Batis Zamani</th>
+                <th>Maks Yukseklik</th>
+                <th>Sure</th>
+                <th>Gorunurluk</th>
               </tr>
             </thead>
             <tbody>
               {passes.length === 0 ? (
                 <tr>
-                  <td colSpan={5} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 24 }}>
-                    No pass predictions available
+                  <td colSpan={6} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 24 }}>
+                    Gecis tahmini mevcut degil
                   </td>
                 </tr>
               ) : (
                 passes.slice(0, 10).map((p, i) => (
                   <tr key={i}>
                     <td className="font-mono">{formatDateTime(p.rise_time)}</td>
+                    <td className="font-mono">{formatDateTime(p.max_time)}</td>
                     <td className="font-mono">{formatDateTime(p.set_time)}</td>
                     <td>
                       <span
                         style={{
-                          color: p.max_elevation >= 45 ? 'var(--success)' : p.max_elevation >= 20 ? 'var(--warning)' : 'var(--text-muted)',
+                          color: p.max_alt >= 45 ? 'var(--success)' : p.max_alt >= 20 ? 'var(--warning)' : 'var(--text-muted)',
                           fontWeight: 600,
                         }}
                       >
-                        {p.max_elevation}&deg;
+                        {p.max_alt}&deg;
                       </span>
                     </td>
-                    <td>{Math.floor(p.duration_seconds / 60)}m {p.duration_seconds % 60}s</td>
-                    <td>{p.direction}</td>
+                    <td>{Math.floor(p.duration_sec / 60)}dk {p.duration_sec % 60}sn</td>
+                    <td>{p.visible ? 'Evet' : 'Hayir'}</td>
                   </tr>
                 ))
               )}
@@ -334,39 +321,37 @@ export default function ISS() {
         </div>
       </div>
 
-      {/* Captures */}
+      {/* Kayitlar */}
       <div className="section">
-        <div className="section-title">Captures</div>
+        <div className="section-title">Kayitlar</div>
         {captures.length === 0 ? (
           <div className="card text-center text-muted" style={{ padding: 32 }}>
-            No captures yet. Record an ISS pass to get started.
+            Henuz kayit yok. Baslamak icin bir ISS gecisi kaydedin.
           </div>
         ) : (
           <div className="table-container">
             <table>
               <thead>
                 <tr>
-                  <th>Date</th>
-                  <th>Filename</th>
-                  <th>Duration</th>
-                  <th>Size</th>
-                  <th>Download</th>
+                  <th>Dosya Adi</th>
+                  <th>Boyut</th>
+                  <th>Tarih</th>
+                  <th>Indir</th>
                 </tr>
               </thead>
               <tbody>
-                {captures.map((c) => (
-                  <tr key={c.id}>
-                    <td className="font-mono">{formatDateTime(c.timestamp)}</td>
-                    <td>{c.filename}</td>
-                    <td>{Math.floor(c.duration / 60)}m {c.duration % 60}s</td>
-                    <td>{c.size_mb?.toFixed(1)} MB</td>
+                {captures.map((c, i) => (
+                  <tr key={i}>
+                    <td className="font-mono">{c.filename}</td>
+                    <td>{formatSize(c.size)}</td>
+                    <td className="font-mono">{formatDateTime(c.mod_time)}</td>
                     <td>
                       <a
-                        href={c.download_url}
+                        href={`/api/v1/iss/captures/${encodeURIComponent(c.filename)}`}
                         className="btn btn-outline btn-sm"
                         download
                       >
-                        Download
+                        Indir
                       </a>
                     </td>
                   </tr>

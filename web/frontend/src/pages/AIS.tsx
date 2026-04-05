@@ -13,13 +13,12 @@ interface Ship {
   speed: number;
   course: number;
   heading: number;
-  ship_type: string;
   last_seen: string;
 }
 
-interface AISStatus {
-  active_ships: number;
+interface AISStats {
   total_messages: number;
+  active_ships: number;
   status: string;
 }
 
@@ -59,14 +58,14 @@ function ShipMarkers({ ships }: { ships: Ship[] }) {
         >
           <Popup>
             <div style={{ color: '#1e293b', minWidth: 200 }}>
-              <strong style={{ fontSize: 14 }}>{ship.name || 'Unknown'}</strong>
+              <strong style={{ fontSize: 14 }}>{ship.name || 'Bilinmiyor'}</strong>
               <table style={{ marginTop: 8, fontSize: 12, width: '100%' }}>
                 <tbody>
                   <tr><td style={{ color: '#64748b', padding: '2px 8px 2px 0' }}>MMSI</td><td style={{ fontFamily: 'monospace' }}>{ship.mmsi}</td></tr>
-                  <tr><td style={{ color: '#64748b', padding: '2px 8px 2px 0' }}>Type</td><td>{ship.ship_type || '--'}</td></tr>
-                  <tr><td style={{ color: '#64748b', padding: '2px 8px 2px 0' }}>Speed</td><td>{ship.speed?.toFixed(1) ?? '--'} kn</td></tr>
-                  <tr><td style={{ color: '#64748b', padding: '2px 8px 2px 0' }}>Course</td><td>{ship.course?.toFixed(0) ?? '--'}&deg;</td></tr>
-                  <tr><td style={{ color: '#64748b', padding: '2px 8px 2px 0' }}>Position</td><td>{ship.lat.toFixed(4)}, {ship.lon.toFixed(4)}</td></tr>
+                  <tr><td style={{ color: '#64748b', padding: '2px 8px 2px 0' }}>Hiz</td><td>{ship.speed?.toFixed(1) ?? '--'} kn</td></tr>
+                  <tr><td style={{ color: '#64748b', padding: '2px 8px 2px 0' }}>Rota</td><td>{ship.course?.toFixed(0) ?? '--'}&deg;</td></tr>
+                  <tr><td style={{ color: '#64748b', padding: '2px 8px 2px 0' }}>Konum</td><td>{ship.lat.toFixed(4)}, {ship.lon.toFixed(4)}</td></tr>
+                  <tr><td style={{ color: '#64748b', padding: '2px 8px 2px 0' }}>Son Gorulme</td><td>{ship.last_seen ? new Date(ship.last_seen).toLocaleString('tr-TR') : '--'}</td></tr>
                 </tbody>
               </table>
             </div>
@@ -79,20 +78,25 @@ function ShipMarkers({ ships }: { ships: Ship[] }) {
 
 export default function AIS() {
   const [ships, setShips] = useState<Ship[]>([]);
-  const [aisStatus, setAisStatus] = useState<AISStatus>({ active_ships: 0, total_messages: 0, status: 'stopped' });
+  const [stats, setStats] = useState<AISStats>({ active_ships: 0, total_messages: 0, status: 'stopped' });
   const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    // Fetch initial data
-    api<{ ships: Ship[] }>('/ais/ships')
-      .then((res) => setShips(res.ships ?? []))
+    // Gemi listesini ve istatistikleri cek
+    api<{ ships: Ship[]; stats: { total_messages: number; active_ships: number } }>('/ais/ships')
+      .then((res) => {
+        setShips(res.ships ?? []);
+        if (res.stats) {
+          setStats((prev) => ({ ...prev, total_messages: res.stats.total_messages, active_ships: res.stats.active_ships }));
+        }
+      })
       .catch(() => {});
 
-    api<AISStatus>('/ais/status')
-      .then((res) => setAisStatus(res))
+    api<AISStats>('/ais/stats')
+      .then((res) => setStats(res))
       .catch(() => {});
 
-    // WebSocket for real-time ship updates
+    // Gercek zamanli gemi guncellemeleri icin WebSocket
     wsRef.current = connectWS(['ais.ships'], (msg: WSMessage) => {
       if (msg.topic === 'ais.ships') {
         const updated = msg.data as Ship;
@@ -105,7 +109,7 @@ export default function AIS() {
           }
           return [...prev, updated];
         });
-        setAisStatus((prev) => ({
+        setStats((prev) => ({
           ...prev,
           total_messages: prev.total_messages + 1,
         }));
@@ -122,12 +126,12 @@ export default function AIS() {
       <div className="page-header">
         <div className="flex-between">
           <div>
-            <h2>🚢 AIS Ship Tracking</h2>
-            <p>Real-time Automatic Identification System receiver</p>
+            <h2>AIS Gemi Takibi</h2>
+            <p>Gercek zamanli Otomatik Tanimlama Sistemi alicisi</p>
           </div>
-          <span className={`badge badge-${aisStatus.status === 'running' ? 'running' : 'stopped'}`}>
+          <span className={`badge badge-${stats.status === 'running' ? 'running' : 'stopped'}`}>
             <span className="badge-dot" />
-            {aisStatus.status}
+            {stats.status === 'running' ? 'Aktif' : 'Durduruldu'}
           </span>
         </div>
       </div>
@@ -135,11 +139,11 @@ export default function AIS() {
       <div className="stats-bar" style={{ marginBottom: 16 }}>
         <div className="stat-card">
           <div className="stat-value" style={{ color: 'var(--success)' }}>{ships.length}</div>
-          <div className="stat-label">Active Ships</div>
+          <div className="stat-label">Aktif Gemiler</div>
         </div>
         <div className="stat-card">
-          <div className="stat-value">{aisStatus.total_messages}</div>
-          <div className="stat-label">Total Messages</div>
+          <div className="stat-value">{stats.total_messages}</div>
+          <div className="stat-label">Toplam Mesaj</div>
         </div>
       </div>
 

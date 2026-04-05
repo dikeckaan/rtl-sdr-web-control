@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { api, clearToken } from '../api/client';
+import { api, post, clearToken } from '../api/client';
 import type { SystemStatus } from '../api/client';
 
 export default function Settings() {
-  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [status, setStatus] = useState<SystemStatus | null>(null);
+  const [lang, setLang] = useState(() => localStorage.getItem('sdr_lang') || 'tr');
 
   useEffect(() => {
     api<SystemStatus>('/system/status')
@@ -15,12 +14,17 @@ export default function Settings() {
       .catch(() => {});
   }, []);
 
-  const handleLanguage = (lang: string) => {
-    i18n.changeLanguage(lang);
-    localStorage.setItem('sdr_lang', lang);
+  const handleLanguage = (newLang: string) => {
+    setLang(newLang);
+    localStorage.setItem('sdr_lang', newLang);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await post('/auth/logout');
+    } catch {
+      /* ignore */
+    }
     clearToken();
     navigate('/login', { replace: true });
   };
@@ -28,110 +32,110 @@ export default function Settings() {
   return (
     <div>
       <div className="page-header">
-        <h2>{t('settings', 'Settings')}</h2>
-        <p>{t('settings_desc', 'System configuration and information')}</p>
+        <h2>Ayarlar</h2>
+        <p>Sistem yapilandirmasi ve bilgileri</p>
       </div>
 
       <div className="grid-2" style={{ maxWidth: 900 }}>
-        {/* System Info */}
+        {/* Sistem Bilgisi */}
         <div className="card">
           <div className="card-title" style={{ marginBottom: 16 }}>
-            {t('system_info', 'System Information')}
+            Sistem Bilgisi
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div className="flex-between">
-              <span className="text-muted text-sm">{t('hostname', 'Hostname')}</span>
+              <span className="text-muted text-sm">Ana Bilgisayar Adi</span>
               <span className="font-mono">{status?.hostname ?? '--'}</span>
             </div>
             <div className="flex-between">
-              <span className="text-muted text-sm">{t('uptime', 'Uptime')}</span>
+              <span className="text-muted text-sm">Calisma Suresi</span>
               <span className="font-mono">{status?.uptime_go ?? '--'}</span>
             </div>
             <div className="flex-between">
-              <span className="text-muted text-sm">{t('memory', 'Memory')}</span>
+              <span className="text-muted text-sm">Bellek</span>
               <span className="font-mono">{status?.memory_mb ? `${status.memory_mb} MB` : '--'}</span>
             </div>
             <div className="flex-between">
-              <span className="text-muted text-sm">{t('goroutines', 'Goroutines')}</span>
+              <span className="text-muted text-sm">Goroutine</span>
               <span className="font-mono">{status?.goroutines ?? '--'}</span>
             </div>
             <div className="flex-between">
-              <span className="text-muted text-sm">{t('ws_clients', 'WS Clients')}</span>
+              <span className="text-muted text-sm">WS Istemcileri</span>
               <span className="font-mono">{status?.ws_clients ?? '--'}</span>
             </div>
             <div className="flex-between">
-              <span className="text-muted text-sm">{t('active_service', 'Active Service')}</span>
+              <span className="text-muted text-sm">Aktif Hizmet</span>
               <span className="font-mono" style={{ color: 'var(--primary)' }}>
-                {status?.active_service || 'None'}
+                {status?.active_service || 'Yok'}
               </span>
             </div>
           </div>
         </div>
 
-        {/* Station Info */}
+        {/* Istasyon Bilgisi */}
         <div className="card">
           <div className="card-title" style={{ marginBottom: 16 }}>
-            {t('station_info', 'Station Information')}
+            Istasyon Bilgisi
           </div>
           {status?.station ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div className="flex-between">
-                <span className="text-muted text-sm">{t('station_name', 'Name')}</span>
+                <span className="text-muted text-sm">Ad</span>
                 <span className="font-mono">{status.station.name}</span>
               </div>
               <div className="flex-between">
-                <span className="text-muted text-sm">{t('latitude', 'Latitude')}</span>
+                <span className="text-muted text-sm">Enlem</span>
                 <span className="font-mono">{status.station.lat.toFixed(6)}</span>
               </div>
               <div className="flex-between">
-                <span className="text-muted text-sm">{t('longitude', 'Longitude')}</span>
+                <span className="text-muted text-sm">Boylam</span>
                 <span className="font-mono">{status.station.lon.toFixed(6)}</span>
               </div>
               <div className="flex-between">
-                <span className="text-muted text-sm">{t('altitude', 'Altitude')}</span>
+                <span className="text-muted text-sm">Yukseklik</span>
                 <span className="font-mono">{status.station.alt} m</span>
               </div>
             </div>
           ) : (
             <div className="text-muted text-center" style={{ padding: 20 }}>
-              {t('no_station', 'No station info available')}
+              Istasyon bilgisi mevcut degil
             </div>
           )}
         </div>
 
-        {/* Language */}
+        {/* Dil */}
         <div className="card">
           <div className="card-title" style={{ marginBottom: 16 }}>
-            {t('language', 'Language')}
+            Dil
           </div>
           <div className="flex-row gap-8">
             <button
-              className={`btn ${i18n.language === 'tr' ? 'btn-primary' : 'btn-outline'}`}
+              className={`btn ${lang === 'tr' ? 'btn-primary' : 'btn-outline'}`}
               onClick={() => handleLanguage('tr')}
               style={{ flex: 1 }}
             >
-              🇹🇷 Turkce
+              Turkce
             </button>
             <button
-              className={`btn ${i18n.language === 'en' ? 'btn-primary' : 'btn-outline'}`}
+              className={`btn ${lang === 'en' ? 'btn-primary' : 'btn-outline'}`}
               onClick={() => handleLanguage('en')}
               style={{ flex: 1 }}
             >
-              🇬🇧 English
+              English
             </button>
           </div>
         </div>
 
-        {/* Account */}
+        {/* Hesap */}
         <div className="card">
           <div className="card-title" style={{ marginBottom: 16 }}>
-            {t('account', 'Account')}
+            Hesap
           </div>
           <p className="text-sm text-muted" style={{ marginBottom: 16 }}>
-            {t('logout_desc', 'Sign out of your account. You will need to sign in again to access the platform.')}
+            Hesabinizdan cikis yapin. Platforma erisim icin tekrar giris yapmaniz gerekecektir.
           </p>
           <button className="btn btn-danger" style={{ width: '100%' }} onClick={handleLogout}>
-            {t('logout', 'Logout')}
+            Cikis Yap
           </button>
         </div>
       </div>
