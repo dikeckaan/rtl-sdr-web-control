@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Havacilik Frekans Dinleme</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a2e;
+            color: #eee;
+            min-height: 100vh;
+        }
+
+        header {
+            background: linear-gradient(135deg, #16213e 0%, #1a1a2e 100%);
+            padding: 24px;
+            text-align: center;
+            border-bottom: 2px solid #4ecca3;
+        }
+
+        header h1 {
+            font-size: 1.8rem;
+            color: #4ecca3;
+            letter-spacing: 2px;
+        }
+
+        header p {
+            color: #888;
+            margin-top: 6px;
+            font-size: 0.9rem;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 32px auto;
+            padding: 0 16px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .card {
+            background-color: #16213e;
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid #253553;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: #4ecca3;
+            box-shadow: 0 0 20px rgba(78, 204, 163, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .card.emergency .card-title {
+            color: #e94560;
+        }
+
+        .frequency {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #4ecca3;
+            margin-bottom: 4px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .card.emergency .frequency {
+            color: #e94560;
+        }
+
+        .modulation {
+            font-size: 0.75rem;
+            color: #666;
+            margin-bottom: 16px;
+        }
+
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #555;
+            transition: background-color 0.3s;
+        }
+
+        .status-dot.active {
+            background-color: #4ecca3;
+            box-shadow: 0 0 6px rgba(78, 204, 163, 0.6);
+        }
+
+        .card.emergency .status-dot.active {
+            background-color: #e94560;
+            box-shadow: 0 0 6px rgba(233, 69, 96, 0.6);
+        }
+
+        audio {
+            width: 100%;
+            height: 40px;
+            margin-top: 8px;
+            border-radius: 8px;
+            outline: none;
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 1.4rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Havacilik Frekans Dinleme</h1>
+        <p>Istanbul Havaalani - Canli Telsiz Yayin</p>
+    </header>
+
+    <div class="container">
+        <div class="card emergency" id="card-emergency">
+            <div class="card-header">
+                <span class="card-title">Acil Durum</span>
+                <span class="status">
+                    <span class="status-dot" id="dot-emergency"></span>
+                    <span id="status-emergency">Baglaniyor...</span>
+                </span>
+            </div>
+            <div class="frequency">121.500 MHz</div>
+            <div class="modulation">AM - Uluslararasi Acil Frekans</div>
+            <audio id="audio-emergency" controls preload="none">
+                <source src="/stream/emergency" type="audio/mpeg">
+            </audio>
+        </div>
+
+        <div class="card" id="card-tower">
+            <div class="card-header">
+                <span class="card-title">Istanbul Kule</span>
+                <span class="status">
+                    <span class="status-dot" id="dot-tower"></span>
+                    <span id="status-tower">Baglaniyor...</span>
+                </span>
+            </div>
+            <div class="frequency">118.100 MHz</div>
+            <div class="modulation">AM - Kule Kontrol</div>
+            <audio id="audio-tower" controls preload="none">
+                <source src="/stream/tower" type="audio/mpeg">
+            </audio>
+        </div>
+
+        <div class="card" id="card-approach">
+            <div class="card-header">
+                <span class="card-title">Istanbul Yaklasma</span>
+                <span class="status">
+                    <span class="status-dot" id="dot-approach"></span>
+                    <span id="status-approach">Baglaniyor...</span>
+                </span>
+            </div>
+            <div class="frequency">120.900 MHz</div>
+            <div class="modulation">AM - Yaklasma Kontrol</div>
+            <audio id="audio-approach" controls preload="none">
+                <source src="/stream/approach" type="audio/mpeg">
+            </audio>
+        </div>
+
+        <div class="card" id="card-ground">
+            <div class="card-header">
+                <span class="card-title">Istanbul Yer</span>
+                <span class="status">
+                    <span class="status-dot" id="dot-ground"></span>
+                    <span id="status-ground">Baglaniyor...</span>
+                </span>
+            </div>
+            <div class="frequency">119.100 MHz</div>
+            <div class="modulation">AM - Yer Kontrol</div>
+            <audio id="audio-ground" controls preload="none">
+                <source src="/stream/ground" type="audio/mpeg">
+            </audio>
+        </div>
+    </div>
+
+    <script>
+        const channels = ['emergency', 'tower', 'approach', 'ground'];
+
+        channels.forEach(ch => {
+            const audio = document.getElementById('audio-' + ch);
+            const dot = document.getElementById('dot-' + ch);
+            const status = document.getElementById('status-' + ch);
+
+            audio.addEventListener('playing', () => {
+                dot.classList.add('active');
+                status.textContent = 'Canli';
+            });
+
+            audio.addEventListener('pause', () => {
+                dot.classList.remove('active');
+                status.textContent = 'Durduruldu';
+            });
+
+            audio.addEventListener('error', () => {
+                dot.classList.remove('active');
+                status.textContent = 'Baglanti yok';
+            });
+
+            audio.addEventListener('waiting', () => {
+                status.textContent = 'Arabellek...';
+            });
+
+            audio.addEventListener('loadstart', () => {
+                status.textContent = 'Hazir';
+            });
+        });
+    </script>
+</body>
+</html>

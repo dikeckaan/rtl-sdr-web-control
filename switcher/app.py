@@ -38,6 +38,54 @@ PROJECTS = {
         "description": "SDR++ Masaustu - Tarayicidan Erisim",
         "port": 8090,
     },
+    "satdump": {
+        "name": "SatDump",
+        "path": f"{BASE_DIR}/satdump/docker-compose.yml",
+        "description": "NOAA/Meteor Uydu Goruntu Yakalama",
+        "port": 8090,
+    },
+    "airband": {
+        "name": "Airband Dinleme",
+        "path": f"{BASE_DIR}/airband/docker-compose.yml",
+        "description": "Havacilik Frekans Dinleme (118-137 MHz)",
+        "port": 8090,
+    },
+    "fmradio": {
+        "name": "FM Radyo",
+        "path": f"{BASE_DIR}/fmradio/docker-compose.yml",
+        "description": "FM Radyo Dinleme",
+        "port": 8090,
+    },
+    "hamradio": {
+        "name": "Amator Radyo",
+        "path": f"{BASE_DIR}/hamradio/docker-compose.yml",
+        "description": "Amator Radyo Dinleme (VHF/UHF)",
+        "port": 8090,
+    },
+    "pager": {
+        "name": "Pager/POCSAG",
+        "path": f"{BASE_DIR}/pager/docker-compose.yml",
+        "description": "POCSAG/FLEX Cagri Cihazi Cozucu",
+        "port": 8090,
+    },
+    "ais": {
+        "name": "AIS Gemi Takip",
+        "path": f"{BASE_DIR}/ais/docker-compose.yml",
+        "description": "Deniz Trafigi Izleme (AIS)",
+        "port": 8090,
+    },
+    "iss": {
+        "name": "ISS/Meteor",
+        "path": f"{BASE_DIR}/iss/docker-compose.yml",
+        "description": "ISS SSTV ve Meteor Scatter Izleme",
+        "port": 8090,
+    },
+    "gsm": {
+        "name": "GSM Tarayici",
+        "path": f"{BASE_DIR}/gsm/docker-compose.yml",
+        "description": "GSM Baz Istasyonu Tarama",
+        "port": 8090,
+    },
 }
 
 

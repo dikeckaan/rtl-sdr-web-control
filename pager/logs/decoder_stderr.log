@@ -1,0 +1,14 @@
+Found 1 device(s):
+  0:  Nooelec, NESDR SMArt v5, SN: 32492798
+
+Using device 0: Generic RTL2832U OEM
+Found Rafael Micro R820T tuner
+Tuner gain set to 40.20 dB.
+Tuned to 153603575 Hz.
+Oversampling input by: 46x.
+Oversampling output by: 1x.
+Buffer size: 8.08ms
+Exact sample rate is: 1014300.020041 Hz
+Allocating 15 zero-copy buffers
+Sampling at 1014300 S/s.
+Output at 22050 Hz.

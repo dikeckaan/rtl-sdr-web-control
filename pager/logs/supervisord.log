@@ -1,0 +1,19 @@
+2026-03-30 01:42:38,258 INFO Set uid to user 0 succeeded
+2026-03-30 01:42:38,263 INFO supervisord started with pid 1
+2026-03-30 01:42:39,267 INFO spawned: 'flask_app' with pid 7
+2026-03-30 01:42:39,269 INFO spawned: 'nginx' with pid 8
+2026-03-30 01:42:39,274 INFO spawned: 'pager_decoder' with pid 9
+2026-03-30 01:42:39,889 WARN exited: flask_app (exit status 1; not expected)
+2026-03-30 01:42:41,011 INFO spawned: 'flask_app' with pid 30
+2026-03-30 01:42:41,326 INFO success: nginx entered RUNNING state, process has stayed up for > than 2 seconds (startsecs)
+2026-03-30 01:42:41,326 WARN exited: flask_app (exit status 1; not expected)
+2026-03-30 01:42:43,329 INFO spawned: 'flask_app' with pid 32
+2026-03-30 01:42:43,615 WARN exited: flask_app (exit status 1; not expected)
+2026-03-30 01:42:44,616 INFO success: pager_decoder entered RUNNING state, process has stayed up for > than 5 seconds (startsecs)
+2026-03-30 01:42:46,620 INFO spawned: 'flask_app' with pid 34
+2026-03-30 01:42:46,988 WARN exited: flask_app (exit status 1; not expected)
+2026-03-30 01:42:47,989 INFO gave up: flask_app entered FATAL state, too many start retries too quickly
+2026-03-30 01:43:01,003 WARN received SIGTERM indicating exit request
+2026-03-30 01:43:01,003 INFO waiting for nginx, pager_decoder to die
+2026-03-30 01:43:02,004 WARN stopped: pager_decoder (terminated by SIGTERM)
+2026-03-30 01:43:02,006 INFO stopped: nginx (exit status 0)

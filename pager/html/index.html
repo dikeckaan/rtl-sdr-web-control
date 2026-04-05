@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POCSAG/FLEX Cagri Cihazi Cozucu</title>
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+        .header {
+            background: #16213e;
+            padding: 20px 30px;
+            border-bottom: 2px solid #4ecca3;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .header h1 {
+            color: #4ecca3;
+            font-size: 1.5em;
+            font-weight: 600;
+        }
+        .status-bar {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .stat-box {
+            background: #1a1a2e;
+            border: 1px solid #4ecca3;
+            border-radius: 8px;
+            padding: 8px 16px;
+            text-align: center;
+        }
+        .stat-box .label {
+            font-size: 0.75em;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .stat-box .value {
+            font-size: 1.1em;
+            color: #4ecca3;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+        }
+        .controls {
+            background: #16213e;
+            padding: 15px 30px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            border-bottom: 1px solid #2a2a4a;
+        }
+        .controls label {
+            color: #aaa;
+            font-size: 0.9em;
+        }
+        .controls input[type="text"] {
+            background: #1a1a2e;
+            border: 1px solid #4ecca3;
+            color: #4ecca3;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 1em;
+            width: 160px;
+            outline: none;
+        }
+        .controls input[type="text"]:focus {
+            border-color: #e94560;
+            box-shadow: 0 0 8px rgba(78, 204, 163, 0.3);
+        }
+        .btn {
+            padding: 8px 18px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: #4ecca3;
+            color: #1a1a2e;
+        }
+        .btn-primary:hover { background: #3dbb92; }
+        .btn-danger {
+            background: #e94560;
+            color: #fff;
+        }
+        .btn-danger:hover { background: #d63451; }
+        .feed-container {
+            padding: 20px 30px;
+            flex: 1;
+        }
+        .feed-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .feed-header h2 {
+            color: #4ecca3;
+            font-size: 1.1em;
+        }
+        #message-feed {
+            height: calc(100vh - 260px);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding-right: 8px;
+        }
+        #message-feed::-webkit-scrollbar { width: 6px; }
+        #message-feed::-webkit-scrollbar-track { background: #1a1a2e; }
+        #message-feed::-webkit-scrollbar-thumb { background: #4ecca3; border-radius: 3px; }
+        .msg-card {
+            background: #16213e;
+            border-radius: 8px;
+            padding: 12px 16px;
+            border-left: 3px solid #4ecca3;
+            animation: slideIn 0.3s ease;
+        }
+        .msg-card.flex-msg { border-left-color: #e94560; }
+        .msg-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        .msg-time {
+            font-size: 0.8em;
+            color: #888;
+            font-family: 'Courier New', monospace;
+        }
+        .msg-type {
+            font-size: 0.75em;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+        .msg-type.pocsag { background: #4ecca322; color: #4ecca3; }
+        .msg-type.flex { background: #e9456022; color: #e94560; }
+        .msg-addr {
+            font-size: 0.85em;
+            color: #4ecca3;
+            font-family: 'Courier New', monospace;
+            margin-bottom: 4px;
+        }
+        .msg-text {
+            font-size: 0.95em;
+            color: #e0e0e0;
+            word-break: break-word;
+            line-height: 1.4;
+        }
+        .connection-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+        }
+        .connected { background: #4ecca3; box-shadow: 0 0 6px #4ecca3; }
+        .disconnected { background: #e94560; box-shadow: 0 0 6px #e94560; }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @media (max-width: 700px) {
+            .header { padding: 12px 15px; }
+            .controls { padding: 10px 15px; }
+            .feed-container { padding: 12px 15px; }
+            #message-feed { height: calc(100vh - 300px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>POCSAG/FLEX Cagri Cihazi Cozucu</h1>
+        <div class="status-bar">
+            <div class="stat-box">
+                <div class="label">Frekans</div>
+                <div class="value" id="current-freq">--</div>
+            </div>
+            <div class="stat-box">
+                <div class="label">Mesaj Sayisi</div>
+                <div class="value" id="msg-count">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="label">Baglanti</div>
+                <div class="value"><span class="connection-dot disconnected" id="conn-dot"></span><span id="conn-text">Baglaniyor</span></div>
+            </div>
+        </div>
+    </div>
+    <div class="controls">
+        <label for="freq-input">Yeni Frekans:</label>
+        <input type="text" id="freq-input" placeholder="153.350M">
+        <button class="btn btn-primary" onclick="changeFreq()">Degistir</button>
+        <button class="btn btn-danger" onclick="clearFeed()">Temizle</button>
+    </div>
+    <div class="feed-container">
+        <div class="feed-header">
+            <h2>Canli Mesaj Akisi</h2>
+        </div>
+        <div id="message-feed"></div>
+    </div>
+
+    <script>
+        let msgCount = 0;
+        let autoScroll = true;
+        const feed = document.getElementById('message-feed');
+
+        // Detect scroll: disable auto-scroll if user scrolls up
+        feed.addEventListener('scroll', () => {
+            const atBottom = feed.scrollTop + feed.clientHeight >= feed.scrollHeight - 50;
+            autoScroll = atBottom;
+        });
+
+        // Socket.IO connection
+        const socket = io({ transports: ['websocket', 'polling'] });
+
+        socket.on('connect', () => {
+            document.getElementById('conn-dot').className = 'connection-dot connected';
+            document.getElementById('conn-text').textContent = 'Bagli';
+        });
+
+        socket.on('disconnect', () => {
+            document.getElementById('conn-dot').className = 'connection-dot disconnected';
+            document.getElementById('conn-text').textContent = 'Baglanti Kesildi';
+        });
+
+        socket.on('new_message', (data) => {
+            addMessage(data.message);
+        });
+
+        function parseMessage(raw) {
+            let timestamp = '';
+            let type = '';
+            let address = '';
+            let text = raw;
+
+            // Extract timestamp [YYYY-MM-DD HH:MM:SS]
+            const tsMatch = raw.match(/^\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]\s*(.*)/);
+            if (tsMatch) {
+                timestamp = tsMatch[1];
+                text = tsMatch[2];
+            }
+
+            // Detect POCSAG or FLEX
+            if (text.includes('POCSAG')) {
+                type = 'pocsag';
+                const addrMatch = text.match(/POCSAG\d+:\s*Address:\s*(\S+)\s+Function:\s*(\d+)/);
+                if (addrMatch) {
+                    address = 'Adres: ' + addrMatch[1] + ' Fonk: ' + addrMatch[2];
+                }
+                const alphaMatch = text.match(/Alpha:\s*(.*)/);
+                if (alphaMatch) {
+                    text = alphaMatch[1];
+                } else {
+                    const numMatch = text.match(/Numeric:\s*(.*)/);
+                    if (numMatch) text = numMatch[1];
+                }
+            } else if (text.includes('FLEX')) {
+                type = 'flex';
+                const flexMatch = text.match(/FLEX.*?(\d{7,}).*?ALN\s*(.*)/);
+                if (flexMatch) {
+                    address = 'Adres: ' + flexMatch[1];
+                    text = flexMatch[2];
+                }
+            }
+
+            return { timestamp, type, address, text };
+        }
+
+        function addMessage(raw) {
+            const parsed = parseMessage(raw);
+            msgCount++;
+            document.getElementById('msg-count').textContent = msgCount;
+
+            const card = document.createElement('div');
+            card.className = 'msg-card' + (parsed.type === 'flex' ? ' flex-msg' : '');
+
+            let typeLabel = '';
+            if (parsed.type === 'pocsag') typeLabel = '<span class="msg-type pocsag">POCSAG</span>';
+            else if (parsed.type === 'flex') typeLabel = '<span class="msg-type flex">FLEX</span>';
+            else typeLabel = '<span class="msg-type pocsag">MESAJ</span>';
+
+            card.innerHTML =
+                '<div class="msg-top">' +
+                    '<span class="msg-time">' + (parsed.timestamp || '--') + '</span>' +
+                    typeLabel +
+                '</div>' +
+                (parsed.address ? '<div class="msg-addr">' + escapeHtml(parsed.address) + '</div>' : '') +
+                '<div class="msg-text">' + escapeHtml(parsed.text) + '</div>';
+
+            feed.appendChild(card);
+
+            // Keep max 500 messages in DOM
+            while (feed.children.length > 500) {
+                feed.removeChild(feed.firstChild);
+            }
+
+            if (autoScroll) {
+                feed.scrollTop = feed.scrollHeight;
+            }
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function changeFreq() {
+            const input = document.getElementById('freq-input');
+            const freq = input.value.trim();
+            if (!freq) return;
+
+            fetch('/api/freq', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ freq: freq })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.freq) {
+                    document.getElementById('current-freq').textContent = data.freq;
+                    input.value = '';
+                }
+            })
+            .catch(err => console.error('Frekans degistirme hatasi:', err));
+        }
+
+        function clearFeed() {
+            feed.innerHTML = '';
+            msgCount = 0;
+            document.getElementById('msg-count').textContent = '0';
+        }
+
+        // Load current frequency
+        fetch('/api/freq')
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('current-freq').textContent = data.freq || '--';
+            });
+    </script>
+</body>
+</html>

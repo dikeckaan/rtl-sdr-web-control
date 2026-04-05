@@ -57,7 +57,7 @@
                 {{ 'Calisiyor' if status[key] else 'Durdu' }}
             </span>
             {% if status[key] %}
-            <a class="link" href="http://{{ request.host.split(':')[0] }}:{{ proj.port }}" target="_blank">
+            <a class="link" href="{% if request.host == 'sdr-selection.kaandikec.com' %}https://sdr.kaandikec.com{% else %}http://{{ request.host.split(':')[0] }}:{{ proj.port }}{% endif %}" target="_blank">
                 Arayuzu Ac (port {{ proj.port }})
             </a>
             <form method="POST" action="/restart/{{ key }}">

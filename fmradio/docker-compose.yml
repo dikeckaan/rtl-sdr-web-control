@@ -1,0 +1,15 @@
+services:
+  fmradio:
+    build: .
+    container_name: fmradio
+    restart: unless-stopped
+    privileged: true
+    ports:
+      - "8090:8090"
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+    environment:
+      TZ: Europe/Istanbul
+      FM_FREQ: "93.0M"
+    tmpfs:
+      - /tmp

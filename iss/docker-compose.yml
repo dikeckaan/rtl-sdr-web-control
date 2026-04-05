@@ -1,0 +1,19 @@
+services:
+  iss:
+    build: .
+    container_name: iss
+    restart: unless-stopped
+    privileged: true
+    ports:
+      - "8090:8090"
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+    volumes:
+      - /home/kaandikec/sdr/iss/captures:/opt/iss/captures
+    environment:
+      TZ: Europe/Istanbul
+      STATION_LAT: "40.94247"
+      STATION_LON: "29.14824"
+      STATION_ALT: "50"
+    tmpfs:
+      - /tmp

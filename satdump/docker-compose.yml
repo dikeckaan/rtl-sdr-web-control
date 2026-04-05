@@ -1,0 +1,17 @@
+services:
+  satdump:
+    build: .
+    container_name: satdump
+    restart: unless-stopped
+    privileged: true
+    ports:
+      - "8090:8080"
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+    volumes:
+      - /home/kaandikec/sdr/satdump/output:/output
+      - /home/kaandikec/sdr/satdump/satdump_cfg.json:/root/.config/satdump/satdump_cfg.json
+    environment:
+      TZ: Europe/Istanbul
+    tmpfs:
+      - /tmp

@@ -1,0 +1,14 @@
+services:
+  gsm:
+    build: .
+    container_name: gsm
+    restart: unless-stopped
+    privileged: true
+    ports:
+      - "8090:8090"
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+    environment:
+      TZ: Europe/Istanbul
+    tmpfs:
+      - /tmp

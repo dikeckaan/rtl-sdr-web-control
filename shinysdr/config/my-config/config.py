@@ -4,7 +4,6 @@
 # be put here, read the manual section on it, available from the running
 # ShinySDR server at: http://localhost:8100/manual/configuration
 
-import os
 from shinysdr.devices import AudioDevice
 from shinysdr.plugins.osmosdr import OsmoSDRDevice
 from shinysdr.plugins.simulate import SimulatedDevice
@@ -32,7 +31,7 @@ config.serve_web(
     # provide any real security unless using HTTPS. The default value
     # in this file has been automatically generated from 128 random bits.
     # Set to None to not use any secret.
-    root_cap=os.environ.get('SHINYSDR_ROOT_CAP', None),
+    root_cap=None,
     
     # Page title / station name
     title='ShinySDR')

@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amator Radyo Dinleme</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        h1 {
+            color: #4ecca3;
+            margin-bottom: 24px;
+            font-size: 1.8em;
+            text-align: center;
+        }
+        .container {
+            max-width: 520px;
+            width: 100%;
+        }
+        .card {
+            background: #16213e;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        .card-title {
+            color: #4ecca3;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        /* Frequency display */
+        .freq-display {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 2.6em;
+            color: #4ecca3;
+            text-align: center;
+            padding: 16px 0;
+            text-shadow: 0 0 20px rgba(78, 204, 163, 0.4);
+        }
+        .freq-mode {
+            text-align: center;
+            font-size: 1.1em;
+            color: #e94560;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+
+        /* Buttons */
+        .btn-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            flex: 1;
+            min-width: 60px;
+            padding: 10px 12px;
+            border: 2px solid #4ecca3;
+            background: transparent;
+            color: #4ecca3;
+            border-radius: 8px;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .btn:hover {
+            background: rgba(78, 204, 163, 0.15);
+        }
+        .btn.active {
+            background: #4ecca3;
+            color: #1a1a2e;
+        }
+        .btn-preset {
+            flex: unset;
+            width: calc(50% - 4px);
+            padding: 10px 8px;
+            border-color: #e94560;
+            color: #e94560;
+            font-size: 0.8em;
+        }
+        .btn-preset:hover {
+            background: rgba(233, 69, 96, 0.15);
+        }
+        .btn-preset.active {
+            background: #e94560;
+            color: #fff;
+        }
+        .preset-freq {
+            display: block;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+            margin-top: 2px;
+        }
+
+        /* Band tabs */
+        .band-tab {
+            border-color: #a88beb;
+            color: #a88beb;
+        }
+        .band-tab:hover {
+            background: rgba(168, 139, 235, 0.15);
+        }
+        .band-tab.active {
+            background: #a88beb;
+            color: #1a1a2e;
+        }
+
+        .band-presets { display: none; }
+        .band-presets.visible { display: flex; }
+
+        /* Manual input */
+        .input-row {
+            display: flex;
+            gap: 8px;
+        }
+        .input-row input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 2px solid #4ecca3;
+            background: #0f3460;
+            color: #eee;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 1em;
+            outline: none;
+        }
+        .input-row input::placeholder { color: #667; }
+        .input-row input:focus { border-color: #e94560; }
+        .input-row button {
+            padding: 10px 20px;
+            background: #4ecca3;
+            color: #1a1a2e;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 0.95em;
+        }
+        .input-row button:hover { background: #3bbd92; }
+
+        /* Audio */
+        audio {
+            width: 100%;
+            margin-top: 4px;
+        }
+        .note {
+            color: #888;
+            font-size: 0.78em;
+            margin-top: 10px;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        /* Status */
+        .status {
+            text-align: center;
+            padding: 6px;
+            font-size: 0.85em;
+            color: #888;
+        }
+        .status.tuning { color: #e94560; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Amator Radyo Dinleme</h1>
+
+        <!-- Frequency Display -->
+        <div class="card">
+            <div class="freq-display" id="freqDisplay">145.500 MHz</div>
+            <div class="freq-mode" id="modeDisplay">FM</div>
+            <div class="status" id="status">Hazir</div>
+        </div>
+
+        <!-- Mode Selector -->
+        <div class="card">
+            <div class="card-title">Modulasyon</div>
+            <div class="btn-row" id="modeButtons">
+                <button class="btn active" data-mode="fm">FM</button>
+                <button class="btn" data-mode="am">AM</button>
+                <button class="btn" data-mode="usb">USB</button>
+                <button class="btn" data-mode="lsb">LSB</button>
+            </div>
+        </div>
+
+        <!-- Band & Presets -->
+        <div class="card">
+            <div class="card-title">Bant Secimi</div>
+            <div class="btn-row" style="margin-bottom: 12px;">
+                <button class="btn band-tab active" data-band="2m">2m VHF</button>
+                <button class="btn band-tab" data-band="70cm">70cm UHF</button>
+                <button class="btn band-tab" data-band="10m">10m HF</button>
+            </div>
+
+            <div class="card-title">On Tanimli Frekanslar</div>
+            <div class="btn-row band-presets visible" data-band="2m" id="presets-2m"></div>
+            <div class="btn-row band-presets" data-band="70cm" id="presets-70cm"></div>
+            <div class="btn-row band-presets" data-band="10m" id="presets-10m"></div>
+        </div>
+
+        <!-- Manual Tune -->
+        <div class="card">
+            <div class="card-title">Manuel Frekans</div>
+            <div class="input-row">
+                <input type="text" id="manualFreq" placeholder="orn: 145.500M">
+                <button onclick="manualTune()">Ayarla</button>
+            </div>
+        </div>
+
+        <!-- Audio Player -->
+        <div class="card">
+            <div class="card-title">Ses Akisi</div>
+            <audio id="audioPlayer" controls preload="none">
+                <source src="/stream" type="audio/mpeg">
+            </audio>
+            <div class="note">
+                Squelch seviyesi 10 olarak ayarlanmistir.<br>
+                Sinyal yokken ses kesilir. Frekans degistirince akisi yeniden baslatin.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentFreq = '145.500M';
+        let currentMode = 'fm';
+        let currentBand = '2m';
+        let presets = [];
+
+        function formatFreq(f) {
+            const num = parseFloat(f);
+            if (f.toUpperCase().endsWith('M')) {
+                return num.toFixed(3) + ' MHz';
+            }
+            return f;
+        }
+
+        function updateDisplay() {
+            document.getElementById('freqDisplay').textContent = formatFreq(currentFreq);
+            document.getElementById('modeDisplay').textContent = currentMode.toUpperCase();
+
+            document.querySelectorAll('#modeButtons .btn').forEach(b => {
+                b.classList.toggle('active', b.dataset.mode === currentMode);
+            });
+
+            document.querySelectorAll('.btn-preset').forEach(b => {
+                b.classList.toggle('active', b.dataset.freq === currentFreq);
+            });
+        }
+
+        function renderPresets() {
+            const bands = { '2m': [], '70cm': [], '10m': [] };
+            presets.forEach(p => {
+                if (bands[p.band]) bands[p.band].push(p);
+            });
+
+            Object.keys(bands).forEach(band => {
+                const container = document.getElementById('presets-' + band);
+                container.innerHTML = '';
+                bands[band].forEach(p => {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn btn-preset';
+                    if (p.freq === currentFreq) btn.classList.add('active');
+                    btn.dataset.freq = p.freq;
+                    btn.dataset.mode = p.mode;
+                    btn.innerHTML = p.label + '<span class="preset-freq">' + p.freq + '</span>';
+                    btn.onclick = () => tune(p.freq, p.mode);
+                    container.appendChild(btn);
+                });
+            });
+        }
+
+        function selectBand(band) {
+            currentBand = band;
+            document.querySelectorAll('.band-tab').forEach(b => {
+                b.classList.toggle('active', b.dataset.band === band);
+            });
+            document.querySelectorAll('.band-presets').forEach(el => {
+                el.classList.toggle('visible', el.dataset.band === band);
+            });
+        }
+
+        async function tune(freq, mode) {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = 'Ayarlaniyor...';
+            statusEl.className = 'status tuning';
+
+            try {
+                const resp = await fetch('/api/tune', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ freq: freq, mode: mode })
+                });
+                const data = await resp.json();
+                currentFreq = data.freq;
+                currentMode = data.mode;
+                updateDisplay();
+                renderPresets();
+
+                statusEl.textContent = 'Ayarlandi - akisi yeniden baslatin';
+                setTimeout(() => {
+                    statusEl.textContent = 'Hazir';
+                    statusEl.className = 'status';
+                }, 4000);
+
+                // Restart audio
+                const audio = document.getElementById('audioPlayer');
+                audio.pause();
+                setTimeout(() => {
+                    audio.load();
+                    audio.play().catch(() => {});
+                }, 3000);
+
+            } catch (e) {
+                statusEl.textContent = 'Hata: ' + e.message;
+            }
+        }
+
+        function manualTune() {
+            const input = document.getElementById('manualFreq').value.trim();
+            if (!input) return;
+            tune(input, currentMode);
+        }
+
+        // Mode buttons
+        document.querySelectorAll('#modeButtons .btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                tune(currentFreq, btn.dataset.mode);
+            });
+        });
+
+        // Band tabs
+        document.querySelectorAll('.band-tab').forEach(btn => {
+            btn.addEventListener('click', () => selectBand(btn.dataset.band));
+        });
+
+        // Enter key for manual input
+        document.getElementById('manualFreq').addEventListener('keydown', e => {
+            if (e.key === 'Enter') manualTune();
+        });
+
+        // Load initial state
+        async function init() {
+            try {
+                const resp = await fetch('/api/tune');
+                const data = await resp.json();
+                currentFreq = data.freq;
+                currentMode = data.mode;
+                presets = data.presets;
+                renderPresets();
+                updateDisplay();
+            } catch (e) {
+                console.error('Init error:', e);
+            }
+        }
+        init();
+    </script>
+</body>
+</html>

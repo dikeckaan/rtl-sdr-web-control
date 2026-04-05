@@ -1,0 +1,11 @@
+{
+    "satdump_general": {
+        "tle_update_interval": 3600,
+        "default_output_folder": "/output"
+    },
+    "station": {
+        "latitude": 40.94247,
+        "longitude": 29.14824,
+        "altitude": 50
+    }
+}

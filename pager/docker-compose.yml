@@ -1,0 +1,17 @@
+services:
+  pager:
+    build: .
+    container_name: pager
+    restart: unless-stopped
+    privileged: true
+    ports:
+      - "8090:8090"
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+    volumes:
+      - /home/kaandikec/sdr/pager/logs:/var/log/pager
+    environment:
+      TZ: Europe/Istanbul
+      PAGER_FREQ: "153.350M"
+    tmpfs:
+      - /tmp

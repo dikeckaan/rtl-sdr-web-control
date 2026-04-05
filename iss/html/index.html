@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISS/Meteor Izleme</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; }
+        .header { background: #16213e; padding: 15px 20px; border-bottom: 2px solid #4ecca3; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .header h1 { color: #4ecca3; font-size: 1.4em; }
+        .header-right { display: flex; gap: 10px; align-items: center; }
+        .btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.85em; }
+        .btn-record { background: #e94560; color: #fff; }
+        .btn-record:hover { background: #c73650; }
+        .btn-record.recording { background: #888; animation: pulse 1s infinite; }
+        .btn-tle { background: #4ecca3; color: #1a1a2e; }
+        .btn-tle:hover { background: #3db890; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        .main { display: grid; grid-template-columns: 1fr 400px; height: calc(100vh - 58px); }
+        #map { height: 100%; }
+
+        .sidebar { background: #16213e; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 15px; }
+        .section-title { color: #4ecca3; font-size: 0.85em; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+
+        .next-pass { background: #1a1a2e; border-radius: 8px; padding: 15px; border: 1px solid #4ecca3; text-align: center; }
+        .countdown { font-size: 2em; color: #4ecca3; font-family: monospace; font-weight: bold; }
+        .pass-info { font-size: 0.85em; color: #888; margin-top: 5px; }
+
+        .pass-table { width: 100%; font-size: 0.8em; border-collapse: collapse; }
+        .pass-table th { text-align: left; color: #4ecca3; padding: 6px 8px; border-bottom: 1px solid #2a2a4a; }
+        .pass-table td { padding: 6px 8px; border-bottom: 1px solid #1a1a2e; color: #ccc; }
+        .pass-table tr:hover { background: rgba(78, 204, 163, 0.05); }
+
+        .captures-list { display: flex; flex-direction: column; gap: 6px; }
+        .capture-item { background: #1a1a2e; padding: 8px 12px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; font-size: 0.8em; }
+        .capture-item a { color: #4ecca3; text-decoration: none; }
+        .capture-item a:hover { text-decoration: underline; }
+        .capture-size { color: #888; }
+
+        .status-badge { padding: 3px 10px; border-radius: 12px; font-size: 0.75em; font-weight: 600; }
+        .status-badge.idle { background: #2a2a4a; color: #888; }
+        .status-badge.recording { background: #e9456033; color: #e94560; }
+
+        @media (max-width: 800px) {
+            .main { grid-template-columns: 1fr; grid-template-rows: 300px 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ISS / Meteor Izleme</h1>
+        <div class="header-right">
+            <span class="status-badge idle" id="recStatus">Bosta</span>
+            <button class="btn btn-record" id="recBtn" onclick="startRecording()">Kayit Baslat</button>
+            <button class="btn btn-tle" onclick="updateTLE()">TLE Guncelle</button>
+        </div>
+    </div>
+    <div class="main">
+        <div id="map"></div>
+        <div class="sidebar">
+            <div>
+                <div class="section-title">Sonraki Gecis</div>
+                <div class="next-pass">
+                    <div class="countdown" id="countdown">--:--:--</div>
+                    <div class="pass-info" id="nextPassInfo">Yukleniyor...</div>
+                </div>
+            </div>
+            <div>
+                <div class="section-title">Yaklasan Gecisler</div>
+                <table class="pass-table">
+                    <thead><tr><th>Tarih</th><th>Sure</th><th>Maks Yuk.</th></tr></thead>
+                    <tbody id="passTableBody"></tbody>
+                </table>
+            </div>
+            <div>
+                <div class="section-title">Kayitlar</div>
+                <div class="captures-list" id="capturesList">
+                    <div style="color: #888; font-size: 0.85em;">Yukleniyor...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const map = L.map('map').setView([40.94, 29.15], 3);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap', maxZoom: 18
+        }).addTo(map);
+
+        const issIcon = L.divIcon({
+            className: 'iss-icon',
+            html: '<div style="background:#e94560;width:14px;height:14px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 10px #e94560"></div>',
+            iconSize: [14, 14], iconAnchor: [7, 7]
+        });
+
+        const stationIcon = L.divIcon({
+            className: 'station-icon',
+            html: '<div style="background:#4ecca3;width:10px;height:10px;border-radius:50%;border:2px solid #fff"></div>',
+            iconSize: [10, 10], iconAnchor: [5, 5]
+        });
+
+        let issMarker = null;
+        let stationMarker = null;
+        let passes = [];
+
+        function formatDate(iso) {
+            const d = new Date(iso);
+            return d.toLocaleDateString('tr-TR', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+        }
+
+        function formatDuration(s) {
+            const m = Math.floor(s / 60);
+            const sec = s % 60;
+            return m + 'dk ' + sec + 's';
+        }
+
+        function updateCountdown() {
+            if (!passes.length) return;
+            const next = new Date(passes[0].rise);
+            const now = new Date();
+            const diff = Math.max(0, Math.floor((next - now) / 1000));
+            const h = Math.floor(diff / 3600);
+            const m = Math.floor((diff % 3600) / 60);
+            const s = diff % 60;
+            document.getElementById('countdown').textContent =
+                String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+
+            if (diff <= 0) {
+                document.getElementById('countdown').textContent = 'GECIS AKTIF!';
+                document.getElementById('countdown').style.color = '#e94560';
+            } else {
+                document.getElementById('countdown').style.color = '#4ecca3';
+            }
+        }
+
+        async function loadPasses() {
+            try {
+                const resp = await fetch('/api/passes');
+                const data = await resp.json();
+                passes = data.passes;
+
+                if (data.station) {
+                    if (!stationMarker) {
+                        stationMarker = L.marker([data.station.lat, data.station.lon], {icon: stationIcon}).addTo(map);
+                        stationMarker.bindPopup('Istasyon');
+                    }
+                }
+
+                const tbody = document.getElementById('passTableBody');
+                tbody.innerHTML = '';
+                passes.forEach(p => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td>${formatDate(p.rise)}</td><td>${formatDuration(p.duration)}</td><td>${p.max_alt}°</td>`;
+                    tbody.appendChild(tr);
+                });
+
+                if (passes.length) {
+                    document.getElementById('nextPassInfo').textContent =
+                        formatDate(passes[0].rise) + ' | ' + formatDuration(passes[0].duration) + ' | Maks ' + passes[0].max_alt + '°';
+                } else {
+                    document.getElementById('nextPassInfo').textContent = 'Gecis bulunamadi';
+                }
+            } catch (e) {
+                console.error('Pass load error:', e);
+            }
+        }
+
+        async function updateISSPosition() {
+            try {
+                const resp = await fetch('/api/position');
+                const data = await resp.json();
+                if (data.position) {
+                    const pos = [data.position.lat, data.position.lon];
+                    if (!issMarker) {
+                        issMarker = L.marker(pos, {icon: issIcon}).addTo(map);
+                        issMarker.bindPopup('ISS');
+                    } else {
+                        issMarker.setLatLng(pos);
+                    }
+                }
+            } catch (e) {}
+        }
+
+        async function loadCaptures() {
+            try {
+                const resp = await fetch('/api/captures');
+                const data = await resp.json();
+                const list = document.getElementById('capturesList');
+                if (!data.captures.length) {
+                    list.innerHTML = '<div style="color:#888;font-size:0.85em">Henuz kayit yok</div>';
+                    return;
+                }
+                list.innerHTML = '';
+                data.captures.forEach(c => {
+                    const div = document.createElement('div');
+                    div.className = 'capture-item';
+                    const size = (c.size / 1024 / 1024).toFixed(1) + ' MB';
+                    div.innerHTML = `<a href="/api/captures/${c.filename}">${c.filename}</a><span class="capture-size">${size}</span>`;
+                    list.appendChild(div);
+                });
+            } catch (e) {}
+        }
+
+        async function startRecording() {
+            const btn = document.getElementById('recBtn');
+            btn.disabled = true;
+            try {
+                const resp = await fetch('/api/record', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({duration: 300})
+                });
+                const data = await resp.json();
+                if (data.recording) {
+                    btn.textContent = 'Kayit Yapiliyor...';
+                    btn.classList.add('recording');
+                    document.getElementById('recStatus').textContent = 'Kayit';
+                    document.getElementById('recStatus').className = 'status-badge recording';
+                }
+            } catch (e) {}
+        }
+
+        async function updateTLE() {
+            try {
+                await fetch('/api/tle/update', {method:'POST'});
+                loadPasses();
+            } catch (e) {}
+        }
+
+        // Socket events
+        const socket = io({transports: ['websocket', 'polling']});
+        socket.on('recording_done', (data) => {
+            const btn = document.getElementById('recBtn');
+            btn.textContent = 'Kayit Baslat';
+            btn.classList.remove('recording');
+            btn.disabled = false;
+            document.getElementById('recStatus').textContent = 'Bosta';
+            document.getElementById('recStatus').className = 'status-badge idle';
+            loadCaptures();
+        });
+
+        // Init
+        loadPasses();
+        loadCaptures();
+        updateISSPosition();
+        setInterval(updateCountdown, 1000);
+        setInterval(updateISSPosition, 10000);
+        setInterval(loadPasses, 300000); // Every 5 min
+    </script>
+</body>
+</html>
