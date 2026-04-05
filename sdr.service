@@ -1,0 +1,17 @@
+[Unit]
+Description=SDR Management Platform
+After=network.target docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/sdr-server -config /etc/sdr/config.toml
+Restart=always
+RestartSec=5
+User=root
+Group=root
+WorkingDirectory=/home/kaandikec/sdr
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+
+[Install]
+WantedBy=multi-user.target

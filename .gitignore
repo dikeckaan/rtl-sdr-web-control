@@ -1,2 +1,7 @@
 .env
 .claude/
+sdr-server
+data/
+web/frontend/node_modules/
+web/frontend/dist/
+*.log

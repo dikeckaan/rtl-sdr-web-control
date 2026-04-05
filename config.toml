@@ -1,0 +1,208 @@
+# SDR Management Platform Configuration
+
+[server]
+listen = ":8080"
+data_dir = "/home/kaandikec/sdr/data"
+
+[auth]
+session_secret = "change-this-to-a-random-secret-in-production"
+
+[station]
+name = "pi5 RTL-SDR"
+latitude = 40.94247
+longitude = 29.14824
+altitude = 82
+
+[sdr]
+device_index = 0
+gain = 40
+ppm_correction = 0
+
+# ─── FM Radio ─────────────────────────────────────────────
+[fm_radio]
+default_freq = "93.0M"
+sample_rate = 200000
+audio_bitrate = "192k"
+
+[[fm_radio.presets]]
+name = "TRT FM"
+freq = "93.3M"
+
+[[fm_radio.presets]]
+name = "Radyo Eksen"
+freq = "96.2M"
+
+[[fm_radio.presets]]
+name = "Joy Türk"
+freq = "89.0M"
+
+[[fm_radio.presets]]
+name = "Kral FM"
+freq = "92.0M"
+
+[[fm_radio.presets]]
+name = "Power FM"
+freq = "100.0M"
+
+[[fm_radio.presets]]
+name = "NTV Radyo"
+freq = "102.8M"
+
+[[fm_radio.presets]]
+name = "Süper FM"
+freq = "90.8M"
+
+[[fm_radio.presets]]
+name = "Radyo D"
+freq = "97.1M"
+
+[[fm_radio.presets]]
+name = "Slow Türk"
+freq = "95.3M"
+
+[[fm_radio.presets]]
+name = "TRT Radyo 1"
+freq = "95.6M"
+
+# ─── Ham Radio ────────────────────────────────────────────
+[ham_radio]
+default_freq = "145.500M"
+default_mode = "fm"
+squelch = 10
+
+[[ham_radio.presets]]
+name = "2m Çağrı"
+freq = "145.500M"
+mode = "fm"
+band = "2m"
+
+[[ham_radio.presets]]
+name = "2m Simplex"
+freq = "145.200M"
+mode = "fm"
+band = "2m"
+
+[[ham_radio.presets]]
+name = "ISS APRS"
+freq = "145.825M"
+mode = "fm"
+band = "2m"
+
+[[ham_radio.presets]]
+name = "APRS"
+freq = "144.800M"
+mode = "fm"
+band = "2m"
+
+[[ham_radio.presets]]
+name = "70cm Çağrı"
+freq = "433.500M"
+mode = "fm"
+band = "70cm"
+
+[[ham_radio.presets]]
+name = "70cm Simplex"
+freq = "433.400M"
+mode = "fm"
+band = "70cm"
+
+[[ham_radio.presets]]
+name = "10m"
+freq = "28.500M"
+mode = "usb"
+band = "10m"
+
+# ─── Airband ─────────────────────────────────────────────
+[airband]
+gain = 38
+
+[[airband.channels]]
+name = "Acil Durum"
+freq = 121.500
+modulation = "am"
+
+[[airband.channels]]
+name = "İstanbul Kule"
+freq = 118.100
+modulation = "am"
+
+[[airband.channels]]
+name = "İstanbul Yaklaşma"
+freq = 120.900
+modulation = "am"
+
+[[airband.channels]]
+name = "İstanbul Yer"
+freq = 119.100
+modulation = "am"
+
+# ─── Pager ────────────────────────────────────────────────
+[pager]
+default_freq = "153.350M"
+protocols = ["POCSAG512", "POCSAG1200", "POCSAG2400", "FLEX"]
+
+# ─── AIS ──────────────────────────────────────────────────
+[ais]
+gain = 40
+sample_rate = 12
+
+# ─── ISS ──────────────────────────────────────────────────
+[iss]
+record_freq = "145.800M"
+max_record_duration = 900
+tle_update_interval = "6h"
+
+# ─── GSM ──────────────────────────────────────────────────
+[gsm]
+gain = 49
+threshold_gsm900 = -10.0
+threshold_dcs1800 = -5.0
+
+[[gsm.operators]]
+mcc_mnc = "286-01"
+name = "Turkcell"
+
+[[gsm.operators]]
+mcc_mnc = "286-02"
+name = "Vodafone TR"
+
+[[gsm.operators]]
+mcc_mnc = "286-03"
+name = "Türk Telekom"
+
+# ─── Docker Services ─────────────────────────────────────
+[docker_services.openwebrx]
+name = "OpenWebRX"
+image = "jketterl/openwebrx:stable"
+port = 8073
+description = "Web tabanlı SDR radyo alıcısı"
+
+[docker_services.ultrafeeder]
+name = "Ultrafeeder ADS-B"
+compose_file = "ultrafeeder/docker-compose.yml"
+port = 80
+description = "Uçak takip sistemi (ADS-B)"
+
+[docker_services.phantomsdr]
+name = "PhantomSDR"
+image = "simonblandford/phantomsdr:latest"
+port = 9002
+description = "Web tabanlı SDR waterfall"
+
+[docker_services.shinysdr]
+name = "ShinySDR"
+image = "jeffersonjhunt/shinysdr:linux-arm64v8-v1.4.0"
+port = 8100
+description = "Gelişmiş SDR alıcı arayüzü"
+
+[docker_services.sdrpp]
+name = "SDR++"
+compose_file = "sdrpp-server/docker-compose.yml"
+port = 8090
+description = "SDR++ masaüstü (noVNC)"
+
+[docker_services.satdump]
+name = "SatDump"
+compose_file = "satdump/docker-compose.yml"
+port = 8080
+description = "NOAA/Meteor uydu görüntü işleme"
