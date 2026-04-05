@@ -1,2 +1,5 @@
 .env
 .claude/
+node_modules/
+/sdr-server
+data/sdr.db
