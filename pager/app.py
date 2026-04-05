@@ -108,4 +108,4 @@ log_thread = threading.Thread(target=tail_log, daemon=True)
 log_thread.start()
 
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0', port=5000)
+    socketio.run(app, host='0.0.0.0', port=5000, allow_unsafe_werkzeug=True)

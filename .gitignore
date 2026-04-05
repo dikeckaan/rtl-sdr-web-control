@@ -3,3 +3,4 @@
 node_modules/
 /sdr-server
 data/sdr.db
+*.log
